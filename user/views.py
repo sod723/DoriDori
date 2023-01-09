@@ -1,12 +1,12 @@
+import os
+from uuid import uuid4
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render
+from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth.hashers import make_password
 from .models import User
-from content.models import Content
+from django.contrib.auth.hashers import make_password
 
-
-# Create your views here.
 
 
 class Join(APIView):
@@ -16,16 +16,19 @@ class Join(APIView):
     def post(self, request):
         # TODO 회원가입
         email = request.data.get('email', None)
-        phone = request.data.get('phone', None)
+        nickname = request.data.get('nickname', None)
         name = request.data.get('name', None)
         password = request.data.get('password', None)
-        is_passenger = request.data.get('is_passenger', None)
+        phonenum = request.data.get('phonenum', None)
+        # ispassenger = request.data.get('ispassenger', None)
 
         User.objects.create(email=email,
-                            phone=phone,
+                            nickname=nickname,
                             name=name,
                             password=make_password(password),
-                            is_passenger=is_passenger)
+                            phonenum=phonenum,
+                            # ispassenger = ispassenger
+                            )
 
         return Response(status=200)
 
@@ -56,9 +59,3 @@ class LogOut(APIView):
     def get(self, request):
         request.session.flush()
         return render(request, "user/login.html")
-
-# def login(request):
-#     return render(request, "user/login.html",)
-#
-# def join(request):
-#     return render(request, "user/join.html", )
