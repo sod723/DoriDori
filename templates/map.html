@@ -34,7 +34,7 @@
         document.querySelector("#btn_select").addEventListener('click', (event) => {
             resultdrawArr = [];
             pointArr = [];
-            
+
             pointArr.push(JSON.parse("{{ start|escapejs }}"));
             pointArr.push(JSON.parse("{{ onpoint|escapejs }}"));
             pointArr.push(JSON.parse("{{ offpoint|escapejs }}"));
@@ -42,8 +42,27 @@
 
             createUserRoute(pointArr);
 
-            map.setZoom(11);
+            map.setZoom(13);
             // 경로 리스트 지도 측면에 생성하기
+        });
+
+        document.querySelector("#btn_driver").addEventListener('click', (event) => {
+            
+            if(window.location.href != "http://127.0.0.1:8000/driverRoute"){
+                window.open('/driverRoute', '_self');
+            }
+
+            pointArr = [];
+            let viapoints = [];
+            {{ viapoints | safe }}.forEach(element => {
+                  viapoints.push(JSON.parse(element));
+            });
+
+            pointArr.push(JSON.parse("{{ start|escapejs }}"));
+            pointArr.push(viapoints);
+            pointArr.push(JSON.parse("{{ end|escapejs }}"));
+
+            console.log(pointArr);
         });
         // 지도 띄우기
         map = new Tmapv2.Map("map_div", {
@@ -57,20 +76,21 @@
         });
     }
 
-    function createUserRoute(path){
-        for (let i = 0; i < path.length; i++) {
-                setMarker(path[i].lat, path[i].lon, i);
-                if (i < path.length - 1) {
-                    const option = getRoute(path[i], path[i + 1]);
 
-                    if (i === 1) { //차
-                        fetchRoute(option);
-                    }
-                    else { //보행자
-                        fetchRoute(option, "/pedestrian");
-                    }
+    function createUserRoute(path) {
+        for (let i = 0; i < path.length; i++) {
+            setMarker(path[i].lat, path[i].lon, i);
+            if (i < path.length - 1) {
+                const option = getRoute(path[i], path[i + 1]);
+
+                if (i === 1) { //차
+                    fetchRoute(option);
+                }
+                else { //보행자
+                    fetchRoute(option, "/pedestrian");
                 }
             }
+        }
     }
     // 경로API request 객체 반환
     function getRoute(start, end) {
@@ -172,6 +192,8 @@
             });
     }
 
+
+
 </script>
 </head>
 
@@ -209,7 +231,7 @@
                             </select>
                             <button id="btn_select">적용하기</button>
                             <a id="userlink" href="/userRoute">User route</a>
-                            <a href="/driverRoute">Driver route</a>
+                            <button id="btn_driver">Driver route</button>
                         </div>
                     </div>
                 </div>
