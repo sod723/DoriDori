@@ -29,19 +29,37 @@
     var longitude;
 
     function initTmap() {
-        // user의 출발 지점
         let initPoint;
         document.querySelector("#btn_select").addEventListener('click', (event) => {
+            let drowInfo = [];
             resultdrawArr = [];
-            pointArr = [];
+            pointArr = JSON.parse("{{user_route|escapejs}}");
 
-            pointArr.push(JSON.parse("{{ start|escapejs }}"));
-            pointArr.push(JSON.parse("{{ onpoint|escapejs }}"));
-            pointArr.push(JSON.parse("{{ offpoint|escapejs }}"));
-            pointArr.push(JSON.parse("{{ end|escapejs }}"));
-
-            createUserRoute(pointArr);
-
+            for(let i in pointArr){
+                setMarker(pointArr[i].lat, pointArr[i].lon, i);
+            }
+            
+            let fullPath = JSON.parse("{{full_path}}"); // 전체 경론
+            let color = ""
+            // 경로그리기
+            fullPath.forEach((path, index) => {
+                drowInfo = [];
+                if(index === 1) {
+                    color = "#ff0000"
+                }
+                else{
+                    color = "#0000ff"
+                }
+                path.forEach((load) => {
+                    load.forEach((point) => {
+                        let latlng = new Tmapv2.LatLng(
+                        point[1], point[0]);
+                        drowInfo.push(latlng);
+                    });
+                });
+                drawLine(drowInfo, color);
+            });
+           
             map.setZoom(13);
             // 경로 리스트 지도 측면에 생성하기
         });
@@ -54,7 +72,8 @@
 
             pointArr = [];
             let viapoints = [];
-            {{ viapoints | safe }}.forEach(element => {
+            
+            JSON.parse("{{viapoints|escapejs}}").forEach(element => {
                   viapoints.push(JSON.parse(element));
             });
 
@@ -76,57 +95,6 @@
         });
     }
 
-
-    function createUserRoute(path) {
-        for (let i = 0; i < path.length; i++) {
-            setMarker(path[i].lat, path[i].lon, i);
-            if (i < path.length - 1) {
-                const option = getRoute(path[i], path[i + 1]);
-
-                if (i === 1) { //차
-                    fetchRoute(option);
-                }
-                else { //보행자
-                    fetchRoute(option, "/pedestrian");
-                }
-            }
-        }
-    }
-    // 경로API request 객체 반환
-    function getRoute(start, end) {
-        return {
-            method: 'POST',
-            headers: {
-                accept: 'application/json',
-                'content-type': 'application/json',
-                appKey: 'l7xxcf22dfc606b84851aa80fef36db0a258'
-            },
-            body: JSON.stringify({
-                startX: start.lon,
-                startY: start.lat,
-                endX: end.lon,
-                endY: end.lat,
-                startName: start.name,
-                endName: end.name
-            })
-
-        }
-
-    }
-    // API request객체와 경로 type에 따라 지도에 경로 표시
-    function fetchRoute(option, type = "") {
-        let routeColor = "#ff0000";
-        if (type) {
-            routeColor = "#0008ff";
-        }
-
-        fetch('https://apis.openapi.sk.com/tmap/routes' + type + '?version=1&callback=function', option)
-            .then(response => response.json())
-            .then(response => {
-                setLoute(response.features, routeColor);
-            })
-            .catch(err => console.error(err));
-    }
     // 경로 그리기
     function drawLine(arrPoint, color) {
         var polyline_;
@@ -139,48 +107,6 @@
         });
         resultdrawArr.push(polyline_);
     }
-    // 경로의 위도 경도
-    function setLoute(resultData, color) {
-        let drawInfoArr = [];
-
-        for (var i in resultData) { //for문 [S]
-            var geometry = resultData[i].geometry;
-            var properties = resultData[i].properties;
-            var polyline_;
-
-            if (geometry.type == "LineString") {
-                for (var j in geometry.coordinates) {
-                    // 경로들의 결과값(구간)들을 포인트 객체로 변환 
-                    var latlng = new Tmapv2.LatLng(
-                        geometry.coordinates[j][1],
-                        geometry.coordinates[j][0]);
-
-                    drawInfoArr.push(latlng);
-                }
-            } else {
-                var markerImg = "";
-                var pType = "";
-                var size;
-
-                markerImg = "http://topopen.tmap.co.kr/imgs/point.png";
-                pType = "GP";
-                size = new Tmapv2.Size(8, 8);
-
-                // 경로들의 결과값들을 포인트 객체로 변환 
-                var latlon = new Tmapv2.Point(
-                    geometry.coordinates[0],
-                    geometry.coordinates[1]);
-
-                var routeInfoObj = {
-                    markerImage: markerImg,
-                    lng: latlon.x,
-                    lat: latlon.y,
-                    pointType: pType
-                };
-            }
-        }
-        drawLine(drawInfoArr, color);
-    }
 
     function setMarker(lat, lon, icon) {
         marker = new Tmapv2.Marker(
@@ -191,9 +117,6 @@
                 map: map
             });
     }
-
-
-
 </script>
 </head>
 
