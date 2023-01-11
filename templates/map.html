@@ -35,6 +35,7 @@
             resultdrawArr = [];
             pointArr = JSON.parse("{{user_route|escapejs}}");
 
+            //user 경로에 마커찍기
             for(let i in pointArr){
                 setMarker(pointArr[i].lat, pointArr[i].lon, i);
             }
