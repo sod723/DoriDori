@@ -42,7 +42,7 @@ INSTALLED_APPS = [
 
     'board',
     'content',
-    'user',
+    'user.apps.UserConfig',
     'rest_framework',
 ]
 
@@ -135,7 +135,13 @@ MODEL_ROOT = os.path.join(BASE_DIR, 'models')
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# 로그인 성공후 이동하는 URL
+LOGIN_REDIRECT_URL = '/'
+
+# 로그아웃시 이동하는 URL
+LOGOUT_REDIRECT_URL = '/'
 
 
 # 커스텀 유저 모델 사용
-AUTH_USER_MODEL = 'user.User'
+# AUTH_USER_MODEL = 'user.User'
+SITE_ID = 1
