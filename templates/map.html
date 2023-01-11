@@ -67,6 +67,9 @@
                   map: map
               });
 
+
+
+
           // 3. 경로탐색 API 사용요청
           $("#btn_select")
               .click(
@@ -468,6 +471,13 @@
 <div class="ft_area" >
   <div class="ft_select_wrap">
     <div class="ft_select">
+      <div>
+        <input type="text" class="text_custom" id="fullAddr"
+			name="fullAddr" value="서울시 마포구 와우산로29가길 69">
+      <button id="btn_start">시작</button>
+        <input type="text" class="text_custom" id="fullAddr"
+			name="fullAddr" value="서울시 마포구 와우산로29가길 69">
+      <button id="btn_end">도착</button></div>
       <select id="selectLevel">
         <option value="0" selected="selected">교통최적+추천</option>
         <option value="1">교통최적+무료우선</option>
@@ -483,6 +493,7 @@
       <option value="N">N</option>
     </select>
       <button id="btn_select">적용하기</button>
+
     </div>
   </div>
 </div></body></section>

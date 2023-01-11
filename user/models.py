@@ -19,12 +19,18 @@ class User(AbstractBaseUser):
 
     profile_image = models.TextField()  # 프로필 이미지
     nickname = models.CharField(max_length=24, unique=True)
-    name = models.CharField(max_length=24)
-    email = models.EmailField(unique=True)
-    phonenum = models.CharField(max_length=24)
-    # is_passenger = models.BooleanField()
+    name = models.CharField(max_length=24, null=False)
+    email = models.EmailField(unique=True, null=False)
+    phonenum = models.CharField(max_length=24, null=False)
 
+    TYPE =(
+        ('passenger', 'passenger'),
+        ('driver', 'driver'),
+    )
+
+    type = models.CharField(max_length=100, null=True, choices=TYPE)
     USERNAME_FIELD = 'nickname'
+
 
     class Meta:
         db_table = "User"

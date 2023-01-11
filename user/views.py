@@ -20,14 +20,14 @@ class Join(APIView):
         name = request.data.get('name', None)
         password = request.data.get('password', None)
         phonenum = request.data.get('phonenum', None)
-        # ispassenger = request.data.get('ispassenger', None)
+        type = request.data.get('type', None)
 
         User.objects.create(email=email,
                             nickname=nickname,
                             name=name,
                             password=make_password(password),
                             phonenum=phonenum,
-                            # ispassenger = ispassenger
+                            type = type
                             )
 
         return Response(status=200)
