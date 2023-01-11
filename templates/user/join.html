@@ -55,8 +55,8 @@
         <div class="form-check mb-3" style="padding: 10px">
 
           {#          <label for="input_is_passenger" style="font-size: 14px;padding: 4px 10px">가입유형</label>#}
-          <input type='radio' name='type' value=true id="input_ispassenger"/>승객
-          <input type='radio' name='type' value=false id="input_ispassenger"/>기사
+          <input type='radio' name='type'  id="choice{{ forloop.counter }}" value="passenger"/>승객
+          <input type='radio' name='type'  id="choice{{ forloop.counter }}" value="driver"/>기사
         </div>
       </div>
 
@@ -84,8 +84,9 @@
           let nickname = $('#input_nickname').val();
           let name = $('#input_name').val();
           let phonenum = $('#input_phonenum').val();
+          let type = $('input[name="type"]:checked').val();
 
-          console.log(email, password, nickname, name, phonenum);
+          console.log(email, password, nickname, name, phonenum, type);
 
           $.ajax({
               url: "/user/join",
@@ -94,7 +95,8 @@
                   password: password,
                   nickname: nickname,
                   name: name,
-                  phonenum: phonenum
+                  phonenum: phonenum,
+                  type: type
               },
               method: "POST",
               success: function (data) {
