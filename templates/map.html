@@ -30,59 +30,47 @@
     function initTmap() {
         let initPoint;
         document.querySelector("#btn_select").addEventListener('click', (event) => {
-            let drowInfo = [];
-            resultdrawArr = [];
-            pointArr = JSON.parse("{{user_route|escapejs}}");
 
-            //user 경로에 마커찍기
-            for(let i in pointArr){
-                setMarker(pointArr[i].lat, pointArr[i].lon, i);
+            let user_type = document.querySelector("#user_type").value;
+
+            let passenger_route = JSON.parse("{{passenger_route|escapejs}}");
+            let passenger_path = JSON.parse("{{passenger_path}}");
+
+            let bus_route = JSON.parse("{{bus_route}}");
+            let viapoints = JSON.parse("{{viapoints|escapejs}}");
+
+            if (resultdrawArr.length > 0) {
+                for (var i in resultdrawArr) {
+                    resultdrawArr[i]
+                        .setMap(null);
+                }
+                resultdrawArr = [];
             }
 
-            let fullPath = JSON.parse("{{full_path}}"); // 전체 경론
-            let color = ""
-            // 경로그리기
-            fullPath.forEach((path, index) => {
-                drowInfo = [];
-                if(index === 1) {
-                    color = "#ff0000"
-                }
-                else{
-                    color = "#0000ff"
-                }
-                path.forEach((load) => {
-                    load.forEach((point) => {
-                        let latlng = new Tmapv2.LatLng(
-                        point[1], point[0]);
-                        drowInfo.push(latlng);
-                    });
-                });
-                drawLine(drowInfo, color);
-            });
+            if (user_type === 'passenger') {
+                passenger_path.forEach((route) => {
+                    drawPedestrianRoute(route);
+                })
+                drawDriverRoute(bus_route);
+            }
+            else {
+                drawDriverRoute(bus_route);
+            }
 
+
+            console.log(passenger_route);
+            console.log(passenger_path);
+            console.log(bus_route);
+            console.log(viapoints);
+
+            // //user 경로에 마커찍기
+            // for(let i in pointArr){
+            //     setMarker(pointArr[i].lat, pointArr[i].lon, i);
+            // }
             map.setZoom(11);
             // 경로 리스트 지도 측면에 생성하기
         });
 
-        document.querySelector("#btn_driver").addEventListener('click', (event) => {
-
-            if(window.location.href != "http://127.0.0.1:8000/driverRoute"){
-                window.open('/driverRoute', '_self');
-            }
-
-            pointArr = [];
-            let viapoints = [];
-
-            JSON.parse("{{viapoints|escapejs}}").forEach(element => {
-                  viapoints.push(JSON.parse(element));
-            });
-
-            pointArr.push(JSON.parse("{{ start|escapejs }}"));
-            pointArr.push(viapoints);
-            pointArr.push(JSON.parse("{{ end|escapejs }}"));
-
-            console.log(pointArr);
-        });
         // 지도 띄우기
         map = new Tmapv2.Map("map_div", {
             center: new Tmapv2.LatLng(37.39725123, 126.95650002),
@@ -95,6 +83,31 @@
         });
     }
 
+    function drawPedestrianRoute(fullpath) {
+        let drawInfo = [];
+        fullpath.forEach((path, index) => {
+            path.forEach((point) => {
+
+                let latlng = new Tmapv2.LatLng(
+                    point[1], point[0]);
+                drawInfo.push(latlng);
+            });
+            drawLine(drawInfo, "#0000ff");
+        });
+    }
+
+    function drawDriverRoute(fullpath) {
+        let drawInfo = [];
+        fullpath.forEach((path, index) => {
+            path.forEach((point) => {
+
+                let latlng = new Tmapv2.LatLng(
+                    point[1], point[0]);
+                drawInfo.push(latlng);
+            });
+            drawLine(drawInfo, "#ff0000");
+        });
+    }
     // 경로 그리기
     function drawLine(arrPoint, color) {
         var polyline_;
@@ -153,8 +166,10 @@
                                 <option value="N">N</option>
                             </select>
                             <button id="btn_select">적용하기</button>
-                            <a id="userlink" href="/userRoute">User route</a>
-                            <button id="btn_driver">Driver route</button>
+                            <select id="user_type">
+                                <option value="passenger" selected="selected">승객</option>
+                                <option value="driver">기사</option>
+                            </select>
                         </div>
                     </div>
                 </div>
