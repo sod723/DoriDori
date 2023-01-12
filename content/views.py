@@ -1,8 +1,6 @@
 from django.shortcuts import render, redirect
 from content.models import Content
-from json import dumps
-from json import loads
-from urllib.parse import urlencode
+from json import dumps, loads
 import requests
 
 headers = {
@@ -11,21 +9,38 @@ headers = {
     "appKey": "l7xx846db5f3bc1e48d29b7275a745d501c8"  # my app key
 }
 
-load = {
-    "startX": 0,
-    "startY": 0,
-    "endX": 0,
-    "endY": 0,
-    "startName": "",
-    "endName": "",
-}
-
 url = "https://apis.openapi.sk.com/tmap/routes"
 
 
 def map(request):
     # user info return
-    return render(request, "map.html", )
+    passenger_info = userRoute()
+    bus_info = driverRoute()
+
+    passenger_route = passenger_info['route']
+    passenger_path = passenger_info['path']
+    bus_route = bus_info['route']
+    via_points = bus_info['viapoints']
+
+    return render(request, "map.html", {
+        "passenger_route": passenger_route,  # list
+        "passenger_path": passenger_path,
+        "bus_route": bus_route,
+        "viapoints": via_points  # list
+    })
+
+
+def get_busroute_payload(start, viapoints, end):
+    return {
+        "startName": start['name'],
+        "startX": start['lon'],
+        "startY": start['lat'],
+        "startTime": "201709121938",
+        "endName": end['name'],
+        "endX": end['lon'],
+        "endY": end['lat'],
+        "viaPoints": viapoints
+    }
 
 
 # API parameter JSON
@@ -46,7 +61,6 @@ def getPath(resultData):
 
     for elem in resultData:
         geometry = elem["geometry"]
-        properties = elem["properties"]
 
         if (geometry["type"] == "LineString"):
             resultList.append(geometry["coordinates"])
@@ -66,21 +80,24 @@ def fetchRoute(option, routeType=""):
 
 def createUserRoute(path, marker):
     resultData = []
-    for i in range(0, len(path)):
-        marker.append([path[i]["lat"], path[i]["lon"]])
-        if (i < len(path) - 1):
-            load = getRouteJSON(path[i], path[i + 1])
-
-            if (i == 1):
-                resultData.append(fetchRoute(load))  # 운전자 경로
-            else:
-                resultData.append(fetchRoute(load, "/pedestrian"))
+    for i in range(0, 3, 2):
+        load = getRouteJSON(path[i], path[i + 1])
+        resultData.append(fetchRoute(load, "/pedestrian"))
 
     return resultData
 
 
+def create_bus_route(payload):
+    resultData = []
+    apiUrl = "https://apis.openapi.sk.com/tmap/routes/routeOptimization10?version=1"
+    response = requests.post(apiUrl, json=payload, headers=headers)
+    x = loads(response.text)
+
+    return getPath(x["features"])
+
+
 # 사용자의 경로를 반환
-def userRoute(request):
+def userRoute():
     markerPoint = []
 
     # 출발지
@@ -97,29 +114,37 @@ def userRoute(request):
     for point in route:
         dumps(point, ensure_ascii=False)
 
-    return render(request, "map.html", {
-        'full_path': path,
-        'user_route': dumps(route),
-    })
+    return {
+        'path': path,
+        'route': dumps(route),
+    }
 
 
 # 운전자의 경로를 반환
-def driverRoute(request):
+def driverRoute():
     # 클러스터링 데이터
-    startJSON = dumps({"lat": 37.39641804, "lon": 126.95858318, "name": "세경아파트후문[버스정류장]", }, ensure_ascii=False)
+    start = {"lat": "37.39641804", "lon": "126.95858318", "name": "세경아파트후문[버스정류장]"}
     viapoints = [
-        dumps({"id": 2000091219, "lat": 37.39894570, "lon": 126.96849888, "name": "스마트베이(마을)[버스정류장]"},
-              ensure_ascii=False),
-        dumps({"id": 2000116823, "lat": 37.39627945, "lon": 126.97441508, "name": "한국교통안전공단안양검사소[버스정류장]"},
-              ensure_ascii=False),
-        dumps({"id": 2000104485, "lat": 37.40480608, "lon": 126.96552676, "name": "중촌마을.동안치매안심센터[버스정류장]"},
-              ensure_ascii=False),
-        dumps({"id": 1135886, "lat": 37.40100116, "lon": 126.97647032, "name": "인덕원역 4번출구"}, ensure_ascii=False)]
+        {"viaPointId": "2000091219", "viaPointName": "스마트베이(마을)[버스정류장]", "viaY": "37.39894570", "viaX": "126.96849888"},
+        {"viaPointId": "2000116823", "viaPointName": "한국교통안전공단안양검사소[버스정류장]", "viaY": "37.39627945",
+         "viaX": "126.97441508"},
+        {"viaPointId": "2000104485", "viaPointName": "중촌마을.동안치매안심센터[버스정류장]", "viaY": "37.40480608",
+         "viaX": "126.96552676"},
 
-    endJSON = dumps({"lat": 37.49632607, "lon": 127.12345426, "name": "국립경찰병원", }, ensure_ascii=False)
+        {"viaPointId": "2000178688", "viaPointName": "문정로데오거리입구[버스정류장]", "viaY": "37.49093773", "viaX": "127.11953810"},
+        {"viaPointId": "2000087334", "viaPointName": "샛별어린이공원입구[버스정류장]", "viaY": "37.49768698", "viaX": "127.12114887"},
+        {"viaPointId": "2000109544", "viaPointName": "가락2동극동아파트[버스정류장]", "viaY": "37.49535410", "viaX": "127.13128691"},
+    ]
+    end = {"lat": "37.50335308", "lon": "127.12639824", "name": "오금동현대아파트[버스정류장]"}
 
-    return render(request, "map.html", {
-        'start': startJSON,
-        'viapoints': dumps(viapoints),
-        'end': endJSON
-    })
+    load = get_busroute_payload(start, viapoints, end)
+
+    for viapoint in viapoints:
+        dumps(viapoint, ensure_ascii=False)
+
+    bus_route = create_bus_route(load)
+
+    return {
+        'route': bus_route,
+        'viapoints': dumps(viapoints)
+    }

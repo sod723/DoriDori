@@ -18,13 +18,16 @@ from django.urls import path, include
 # from django.conf.urls import include
 from django.conf import settings
 from django.conf.urls.static import static
+from board.views import base_views
 from .views import Main
 
 urlpatterns = [
-                  path('', Main.as_view()),
-                  path('', include('board.urls')),
-                  path('', include('content.urls')),
-                  path('user/', include('user.urls')),
+    path('', Main.as_view()),
+    path('admin/', admin.site.urls),
+    path('board/', include('board.urls')),
+    path('user/', include('user.urls')),
+    path('', include('content.urls')),
+    path('', base_views.index, name='index'),  # '/' 에 해당되는 path
 
-              ] \
-              # + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] \
+    # + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
