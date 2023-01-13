@@ -1,5 +1,3 @@
-from django.contrib.auth.base_user import AbstractBaseUser
-from django.db import models
 
 # # Create your models here.
 # class User(AbstractBaseUser):
@@ -32,5 +30,5 @@ from django.db import models
 #     USERNAME_FIELD = 'nickname'
 #
 #
-#     class Meta:
+#     class Metaㅋ
 #         db_table = "User"
