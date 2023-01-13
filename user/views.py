@@ -10,6 +10,7 @@ def signup(request):
             username = form.cleaned_data.get('username')
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)  # 사용자 인증
+            first_name = form.cleaned_data.get('first_name')
             login(request, user)  # 로그인
             return redirect('index')
     else:

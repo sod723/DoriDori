@@ -24,8 +24,14 @@
             <input type="text" class="form-control" name="email" id="email"
                    value="{{ form.email.value|default_if_none:'' }}">
         </div>
+        <div class="form-check mb-3" style="padding: 10px">
+          <input type='radio' name='first_name'  id="choice{{ forloop.counter }}" value="passenger"/>승객
+          <input type='radio' name='first_name'  id="choice{{ forloop.counter }}" value="driver"/>기사
+        </div>
+        <button id="join_button" type="submit" class="btn btn-primary">생성하기</button>
 
-        <button type="submit" class="btn btn-primary">생성하기</button>
+
+
     </form>
 </div>
 {% endblock %}
