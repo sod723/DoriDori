@@ -42,8 +42,7 @@
 
             if (resultdrawArr.length > 0) {
                 for (var i in resultdrawArr) {
-                    resultdrawArr[i]
-                        .setMap(null);
+                    resultdrawArr[i].setMap(null);
                 }
                 resultdrawArr = [];
             }
@@ -58,17 +57,18 @@
                 drawDriverRoute(bus_route);
             }
 
-
             console.log(passenger_route);
             console.log(passenger_path);
             console.log(bus_route);
             console.log(viapoints);
 
-            // //user 경로에 마커찍기
-            // for(let i in pointArr){
-            //     setMarker(pointArr[i].lat, pointArr[i].lon, i);
-            // }
-            map.setZoom(11);
+            //경유지 마커찍기
+            let iconUrl = "http://topopen.tmap.co.kr/imgs/point.png";
+            viapoints.forEach((point) => {
+                setMarker(point.viaY, point.viaX, iconUrl, new Tmapv2.Size(8, 8))
+            })
+            
+            map.setZoom(13);
             // 경로 리스트 지도 측면에 생성하기
         });
 
@@ -88,7 +88,6 @@
         let drawInfo = [];
         fullpath.forEach((path, index) => {
             path.forEach((point) => {
-
                 let latlng = new Tmapv2.LatLng(
                     point[1], point[0]);
                 drawInfo.push(latlng);
@@ -122,12 +121,12 @@
         resultdrawArr.push(polyline_);
     }
 
-    function setMarker(lat, lon, icon) {
+    function setMarker(lat, lon, icon, size) {
         marker = new Tmapv2.Marker(
             {
                 position: new Tmapv2.LatLng(lat, lon),
-                icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_" + icon + ".png",
-                iconSize: new Tmapv2.Size(24, 38),
+                icon: icon,
+                iconSize: size,
                 map: map
             });
     }

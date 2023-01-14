@@ -12,7 +12,6 @@ headers = {
 url = "https://apis.openapi.sk.com/tmap/routes"
 
 def map(request):
-    # user info return
     passenger_info = userRoute()
     bus_info = driverRoute()
 
@@ -28,6 +27,23 @@ def map(request):
         "viapoints": via_points #list
     })
 
+# 위도 경도 => 근처 버스정류장 정보 return
+# parameter : 클러스터링한 위도 경도(문자열)
+def get_around_busstop(lat, lng):
+    apiUrl = "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&centerLon=" + lng + "&centerLat=" + lat +"&categories=버스정류장&page=1&count=1&radius=1&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&multiPoint=N&sort=distance"
+    
+    response = requests.get(apiUrl, headers=headers)
+    # 가장 가까운 버스정류장 정보
+    busstop_info = loads(response.text)['searchPoiInfo']['pois']['poi'][0]
+
+    return {
+        'id' : busstop_info['id'],
+        'lat' : busstop_info['noorLat'],
+        'lon' : busstop_info['noorLon'],
+        'name' : busstop_info['name']
+    }
+
+# API parameter JSON
 def get_busroute_payload(start, viapoints, end):
     return {
         "startName": start['name'],
@@ -72,6 +88,7 @@ def fetchRoute(option, routeType =""):
     x = loads(response.text)
     return getPath(x["features"])
 
+# user의 보행자 경로
 def createUserRoute(path, marker):
     resultData = []
     for i in range(0, 3, 2):
@@ -82,7 +99,7 @@ def createUserRoute(path, marker):
 
 def create_bus_route(payload):
     resultData = []
-    apiUrl = "https://apis.openapi.sk.com/tmap/routes/routeOptimization10?version=1"
+    apiUrl = url + "/routeOptimization10?version=1"
     response = requests.post(apiUrl, json=payload, headers=headers)
     x = loads(response.text)
 
@@ -100,6 +117,8 @@ def userRoute():
              {"lat": 37.39641804, "lon": 126.95858318, "name": "세경아파트후문[버스정류장]"},
              {"lat": 37.49093773, "lon": 127.11953810, "name": "문정로데오거리입구[버스정류장]"},
              {"lat": 37.49632607, "lon": 127.12345426, "name": "국립경찰병원", }]
+    
+    print(get_around_busstop(str(37.39725123), str(126.95650002)))
     
     path = createUserRoute(route, markerPoint)
 
@@ -132,7 +151,6 @@ def driverRoute():
         dumps(viapoint, ensure_ascii=False)
     
     bus_route = create_bus_route(load)
-
     return {
         'route': bus_route,
         'viapoints': dumps(viapoints)
