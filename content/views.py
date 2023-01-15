@@ -70,15 +70,17 @@ def getRouteJSON(start, end):
 # 경로 point 반환
 def getPath(resultData):
     resultList = []
-
+    resultPoins = []
     for elem in resultData:
         geometry = elem["geometry"]
+        properties = elem["properties"]
 
         if(geometry["type"] == "LineString"):
             resultList.append(geometry["coordinates"])
-        else:
-            pass
+        elif "viaPointId" in properties:
+            resultPoins.append(geometry["coordinates"])
     
+    print(resultPoins)
     return resultList
                 
 # 경로 구하기
@@ -118,13 +120,26 @@ def userRoute():
              {"lat": 37.49093773, "lon": 127.11953810, "name": "문정로데오거리입구[버스정류장]"},
              {"lat": 37.49632607, "lon": 127.12345426, "name": "국립경찰병원", }]
     
-    print(get_around_busstop(str(37.39725123), str(126.95650002)))
+    # print(get_around_busstop(str(37.39725123), str(126.95650002)))
     
     path = createUserRoute(route, markerPoint)
 
     for point in route:
         dumps(point, ensure_ascii=False)
     
+    # { 도보 정보 : 
+    #   { 입력 지점(위도&경도) : [출발지, 탑승지, 하차지, 목적지]
+    #     경로(위도&경도) : [[출발지-탑승지], [하차지-목적지]],
+    #     시간 : [[출발지-탑승지], [하차지-목적지]],  
+    #     거리 : [[출발지-탑승지], [하차지-목적지]]
+    #   },
+    #  차도 정보 : {
+    #     경로(위도&경도) : [경로 ...],
+    #     시간 : 시간,
+    #     거리 : 거리
+    #   }
+    # }
+
     return {
         'path': path,
         'route': dumps(route),
@@ -147,6 +162,9 @@ def driverRoute():
 
     load = get_busroute_payload(start, viapoints, end)
     
+    # { 경로 : [경로 ...],
+    #   경유지 : [경유지 ...]
+    # }
     for viapoint in viapoints:
         dumps(viapoint, ensure_ascii=False)
     
