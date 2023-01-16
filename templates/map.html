@@ -34,11 +34,14 @@
 
             let user_type = document.querySelector("#user_type").value;
 
-            let passenger_route = JSON.parse("{{passenger_route|escapejs}}");
-            let passenger_path = JSON.parse("{{passenger_path}}");
+            let user_info = JSON.parse("{{user_info|escapejs}}");
+            let passenger_path = user_info.walking.path 
+            // let passenger_path = JSON.parse("{{passenger_path}}");
 
-            let bus_route = JSON.parse("{{bus_route}}");
-            let viapoints = JSON.parse("{{viapoints|escapejs}}");
+            // let bus_route = JSON.parse("{{bus_route}}");
+            // console.log(bus_route);
+
+            // let viapoints = JSON.parse("{{viapoints|escapejs}}");
 
             if (resultdrawArr.length > 0) {
                 for (var i in resultdrawArr) {
@@ -51,22 +54,22 @@
                 passenger_path.forEach((route) => {
                     drawPedestrianRoute(route);
                 })
-                drawDriverRoute(bus_route);
+                //drawDriverRoute(bus_route);
             }
             else {
                 drawDriverRoute(bus_route);
             }
 
-            console.log(passenger_route);
-            console.log(passenger_path);
-            console.log(bus_route);
-            console.log(viapoints);
+            // console.log(passenger_route);
+            // console.log(passenger_path);
+            // console.log(bus_route);
+            // console.log(viapoints);
 
             //경유지 마커찍기
-            let iconUrl = "http://topopen.tmap.co.kr/imgs/point.png";
-            viapoints.forEach((point) => {
-                setMarker(point.viaY, point.viaX, iconUrl, new Tmapv2.Size(8, 8))
-            })
+            // let iconUrl = "http://topopen.tmap.co.kr/imgs/point.png";
+            // viapoints.forEach((point) => {
+            //     setMarker(point.viaY, point.viaX, iconUrl, new Tmapv2.Size(8, 8))
+            // })
             
             map.setZoom(13);
             // 경로 리스트 지도 측면에 생성하기
