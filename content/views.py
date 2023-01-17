@@ -380,7 +380,7 @@ def GetSpotPoint(request):
             content.save()
         else:
             content=Content(user_id=userid,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1]).save()
-            context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
+        start_clustering()
         context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
         return HttpResponse(json.dumps(context), content_type='application/json')
     else:
@@ -395,7 +395,6 @@ def getLatLng(addr):
     headers = {"Authorization": "KakaoAK 894cfd738b31d10baba806317025d155"}
     result = json.loads(str(requests.get(url, headers=headers).text))
     match_first = result['documents'][0]['address']
-
     return float(match_first['y']), float(match_first['x'])
 
 def start_clustering():
@@ -407,12 +406,12 @@ def start_clustering():
             content=Content.objects.get(id=people+1)
             arr[people][0]=content.s_longitude
             arr[people][1]=content.s_latitude
-    km = KMeans(n_clusters=4, init='k-means++', random_state=10)
+    km = KMeans(n_clusters=2, init='k-means++', random_state=10)
     start_km=km.fit_predict(arr)
-    for i in range(4):
+    for i in range(2):
         center_x=km.cluster_centers_[i][0]
         center_y = km.cluster_centers_[i][1]
-        start=Start_Stop(bus_group=bus_group,s_longitude=center_x,s_latitude=center_y).save()
+        start=Start_Stop(bus_group=bus_group,s_longitude=km.cluster_centers_[i][0],s_latitude=km.cluster_centers_[i][1]).save()
 
     for people in range(rows):
         content = Content.objects.get(id=people+1)
