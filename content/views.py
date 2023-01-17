@@ -1,7 +1,20 @@
+import geocoder
+from folium import plugins
+import folium
+from haversine import haversine  # 거리측정
 from django.shortcuts import render, redirect
 from content.models import Content
-from json import dumps, loads
-import requests
+from json import dumps
+from json import loads
+from urllib.parse import urlencode
+from django.http.response import HttpResponse
+import json, requests
+from content.models import Content
+# from . import RouteSearch
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from django.core import serializers
 
 headers = {
     "accept": "application/json",
@@ -9,27 +22,67 @@ headers = {
     "appKey": "l7xx846db5f3bc1e48d29b7275a745d501c8"  # my app key
 }
 
+load = {
+    "startX": 0,
+    "startY": 0,
+    "endX": 0,
+    "endY": 0,
+    "startName": "",
+    "endName": "",
+}
+
 url = "https://apis.openapi.sk.com/tmap/routes"
 
+g = geocoder.ip('me')
 
 def map(request):
     # user info return
-    passenger_info = userRoute()
-    bus_info = driverRoute()
+    map = folium.Map(location=g.latlng, zoom_start=15, width='100%', height='100%', )
+    plugins.LocateControl().add_to(map)
+    plugins.Geocoder().add_to(map)
 
-    passenger_route = passenger_info['route']
-    passenger_path = passenger_info['path']
-    bus_route = bus_info['route']
-    via_points = bus_info['viapoints']
+    # passenger_info = userRoute()
+    # bus_info = driverRoute()
+    #
+    # passenger_route = passenger_info['route']
+    # passenger_path = passenger_info['path']
+    # bus_route = bus_info['route']
+    # via_points = bus_info['viapoints']
 
+    maps = map._repr_html_()  # 지도를 템플릿에 삽입하기위해 iframe이 있는 문자열로 반환 (folium)
     return render(request, "map.html", {
-        "passenger_route": passenger_route,  # list
-        "passenger_path": passenger_path,
-        "bus_route": bus_route,
-        "viapoints": via_points  # list
-    })
+                                        'map': maps,
+                                        'content' : Content,
+                                        # "passenger_route": passenger_route,  # list
+                                        # "passenger_path": passenger_path,
+                                        # "bus_route": bus_route,
+                                        # "viapoints": via_points  # list
+                                        })
+
+def getUsrLatLng(request):
+    content = Content.objects.all()
+    content_list = serializers.serialize('json', content)
+    return HttpResponse(content_list, content_type="text/json=comment-filtered")
 
 
+# 위도 경도 => 근처 버스정류장 정보 return
+# parameter : 클러스터링한 위도 경도(문자열)
+def get_around_busstop(lat, lng):
+    apiUrl = "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&centerLon=" + lng + "&centerLat=" + lat + "&categories=버스정류장&page=1&count=1&radius=1&reqCoordType=WGS84GEO&resCoordType=WGS84GEO&multiPoint=N&sort=distance"
+
+    response = requests.get(apiUrl, headers=headers)
+    # 가장 가까운 버스정류장 정보
+    busstop_info = loads(response.text)['searchPoiInfo']['pois']['poi'][0]
+
+    return {
+        'id': busstop_info['id'],
+        'lat': busstop_info['noorLat'],
+        'lon': busstop_info['noorLon'],
+        'name': busstop_info['name']
+    }
+
+
+# API parameter JSON
 def get_busroute_payload(start, viapoints, end):
     return {
         "startName": start['name'],
@@ -58,15 +111,17 @@ def getRouteJSON(start, end):
 # 경로 point 반환
 def getPath(resultData):
     resultList = []
-
+    resultPoins = []
     for elem in resultData:
         geometry = elem["geometry"]
+        properties = elem["properties"]
 
         if (geometry["type"] == "LineString"):
             resultList.append(geometry["coordinates"])
-        else:
-            pass
+        elif "viaPointId" in properties:
+            resultPoins.append(geometry["coordinates"])
 
+    print(resultPoins)
     return resultList
 
 
@@ -78,6 +133,7 @@ def fetchRoute(option, routeType=""):
     return getPath(x["features"])
 
 
+# user의 보행자 경로
 def createUserRoute(path, marker):
     resultData = []
     for i in range(0, 3, 2):
@@ -89,7 +145,7 @@ def createUserRoute(path, marker):
 
 def create_bus_route(payload):
     resultData = []
-    apiUrl = "https://apis.openapi.sk.com/tmap/routes/routeOptimization10?version=1"
+    apiUrl = url + "/routeOptimization10?version=1"
     response = requests.post(apiUrl, json=payload, headers=headers)
     x = loads(response.text)
 
@@ -109,10 +165,25 @@ def userRoute():
              {"lat": 37.49093773, "lon": 127.11953810, "name": "문정로데오거리입구[버스정류장]"},
              {"lat": 37.49632607, "lon": 127.12345426, "name": "국립경찰병원", }]
 
+    # print(get_around_busstop(str(37.39725123), str(126.95650002)))
+
     path = createUserRoute(route, markerPoint)
 
     for point in route:
         dumps(point, ensure_ascii=False)
+
+    # { 도보 정보 :
+    #   { 입력 지점(위도&경도) : [출발지, 탑승지, 하차지, 목적지]
+    #     경로(위도&경도) : [[출발지-탑승지], [하차지-목적지]],
+    #     시간 : [[출발지-탑승지], [하차지-목적지]],
+    #     거리 : [[출발지-탑승지], [하차지-목적지]]
+    #   },
+    #  차도 정보 : {
+    #     경로(위도&경도) : [경로 ...],
+    #     시간 : 시간,
+    #     거리 : 거리
+    #   }
+    # }
 
     return {
         'path': path,
@@ -139,12 +210,38 @@ def driverRoute():
 
     load = get_busroute_payload(start, viapoints, end)
 
+    # { 경로 : [경로 ...],
+    #   경유지 : [경유지 ...]
+    # }
     for viapoint in viapoints:
         dumps(viapoint, ensure_ascii=False)
 
     bus_route = create_bus_route(load)
-
     return {
         'route': bus_route,
         'viapoints': dumps(viapoints)
     }
+
+
+###########################################################
+#
+
+
+@login_required(login_url='user:login')
+def GetSpotPoint(request):
+    start_coordinate = getLatLng(request.POST.get('StartAddr'))
+    end_coordinate = getLatLng(request.POST.get('EndAddr'))
+
+    context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
+
+    return HttpResponse(json.dumps(context), content_type='application/json')
+
+
+@login_required(login_url='user:login')
+def getLatLng(addr):
+    url = 'https://dapi.kakao.com/v2/local/search/address.json?query=' + addr
+    headers = {"Authorization": "KakaoAK d40b5353b2f09323baf1e1f54a31fcc3"}
+    result = json.loads(str(requests.get(url, headers=headers).text))
+    match_first = result['documents'][0]['address']
+
+    return float(match_first['y']), float(match_first['x'])
