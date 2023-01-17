@@ -368,10 +368,27 @@ def GetSpotPoint(request):
     start_coordinate = getLatLng(request.POST.get('StartAddr'))
     end_coordinate = getLatLng(request.POST.get('EndAddr'))
     if request.user.is_authenticated:
-        id=request.user.id
-        content=Content(user_id=id,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1]).save()
-        context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
-    return HttpResponse(json.dumps(context), content_type='application/json')
+        userid=request.user.id
+        if Content.objects.filter(user_id=userid).exists():
+            content=Content.objects.get(user_id=userid)
+            content.s_latitude=start_coordinate[0]
+            content.s_longitude=start_coordinate[1]
+            content.e_latitude=end_coordinate[0]
+            content.e_longitude=end_coordinate[1]
+            content.save()
+            context = {'startaddr_': start_coordinate, 'endaddr': end_coordinate}
+            return HttpResponse(json.dumps(context), content_type='application/json')
+        else:
+            content=Content(user_id=userid,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1]).save()
+            context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
+            return HttpResponse(json.dumps(context), content_type='application/json')
+        #context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
+        #return HttpResponse(json.dumps(context), content_type='application/json')
+    else:
+        print("heelo")
+        #회원가입창으로 돌려야하는기능구현해야함
+        return render(request,'../templates/home.html')
+
 
 
 def getLatLng(addr):
@@ -381,3 +398,5 @@ def getLatLng(addr):
     match_first = result['documents'][0]['address']
 
     return float(match_first['y']), float(match_first['x'])
+
+

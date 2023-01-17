@@ -9,6 +9,10 @@ class Content(models.Model):
     e_longitude = models.FloatField(default=True)
     boarding_time = models.TextField()
 
+
+
+
+
 class Alltimeshop(models.Model):
     name = models.AutoField(primary_key=True)
     lat = models.FloatField(blank=True, null=True)
