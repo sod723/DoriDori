@@ -11,17 +11,20 @@ headers = {
 
 url = "https://apis.openapi.sk.com/tmap/routes"
 
-def map(request):
-    user_info = userRoute()
-    bus_info = driverRoute()
+driver_data = {
+        'path': [],
+        'viaPoints' : [],
+        'time' : [],
+        'distance' : []
+}
 
-    # bus_route = bus_info['route']
-    # via_points = bus_info['viapoints']
+def map(request):
+    bus_info = driverRoute()
+    user_info = userRoute()
     
     return render(request, "map.html", {
-        "user_info" : user_info,
-        # "bus_route": bus_route, 
-        # "viapoints": via_points #list
+        "user_info" : dumps(user_info),
+        "bus_info": dumps(bus_info) 
     })
 
 # 위도 경도 => 근처 버스정류장 정보 return
@@ -39,6 +42,8 @@ def get_around_busstop(lat, lng):
         'lon' : busstop_info['noorLon'],
         'name' : busstop_info['name']
     }
+
+# def get_location_info(lat, lon):
 
 # API parameter JSON
 def get_busroute_payload(start, viapoints, end):
@@ -67,32 +72,28 @@ def getRouteJSON(start, end):
 # 경로 point 반환
 def getPath(resultData):
     resultList = []
-    viaPoins = []
+    viaPoints = []
     for elem in resultData:
         geometry = elem["geometry"]
         properties = elem["properties"]
 
         if(geometry["type"] == "LineString"):
-            resultList.append(geometry["coordinates"])
+            for coord in geometry["coordinates"]:
+                resultList.append(coord)
+        # 경유지        
         elif "viaPointId" in properties:
-            viaPoins.append(geometry["coordinates"])
+            viaPoints.append(geometry["coordinates"])
     
     # 경유지 경로를 구하는 경우 경로, 경유지(위도, 경도)반환
-    if viaPoins:
+    if viaPoints:
         return {
             'path' : resultList,
-            'viapoints' : viaPoins
+            'viapoints' : viaPoints
         }
     else:
         return resultList
   
 # 경로 구하기
-def create_bus_route(payload):
-    apiUrl = url + "/routeOptimization10?version=1"
-    response = requests.post(apiUrl, json=payload, headers=headers)
-    x = loads(response.text)
-
-    return getPath(x['features'])
 
 def get_pedestrian_routedata(start, end):
     payload = getRouteJSON(start, end)
@@ -117,34 +118,45 @@ def set_walking_data(points, dic):
         dic['time'].append(response[0]['properties']['totalTime'])
         dic['distance'].append(response[0]['properties']['totalDistance'])
 
+def slicing_list(start, end, coordi_list):
+    start_idx = coordi_list.index(start)
+    end_idx = coordi_list.index(end)
+
+    return coordi_list[start_idx + 1:end_idx]
+
 def set_bus_data(start, end, dic):
-    start = {"lat": "37.39641804", "lon": "126.95858318", "name": "세경아파트후문[버스정류장]"} 
-    viapoints = [
-        {"viaPointId": "2000091219", "viaPointName": "스마트베이(마을)[버스정류장]", "viaY": "37.39894570", "viaX": "126.96849888"},
-        {"viaPointId": "2000116823", "viaPointName": "한국교통안전공단안양검사소[버스정류장]", "viaY": "37.39627945", "viaX": "126.97441508"},
-        {"viaPointId": "2000104485", "viaPointName": "중촌마을.동안치매안심센터[버스정류장]", "viaY": "37.40480608", "viaX": "126.96552676"},
+    
+    viaPoints = slicing_list([start['lon'], start['lat']], [end['lon'], end['lat']], driver_data['viaPoints'])
+    user_viaPoints = []
 
-        {"viaPointId": "2000178688", "viaPointName": "문정로데오거리입구[버스정류장]", "viaY": "37.49093773", "viaX": "127.11953810"},
-        {"viaPointId": "2000087334", "viaPointName": "샛별어린이공원입구[버스정류장]", "viaY": "37.49768698", "viaX": "127.12114887"},
-        {"viaPointId": "2000109544", "viaPointName": "가락2동극동아파트[버스정류장]", "viaY": "37.49535410", "viaX": "127.13128691"},
-    ]
-    end = {"lat": "37.50335308", "lon": "127.12639824", "name": "오금동현대아파트[버스정류장]"}
+    start_point = {"lat": str(start['lat']), "lon": str(start['lon']), "name": start['name']} 
+    for i in range(0, len(viaPoints)):
+        user_viaPoints.append({"viaPointId": f"via{i}", "viaPointName": f"viaPoint{i}", "viaY": str(viaPoints[i][1]), "viaX": str(viaPoints[i][0])})
+    end_point = {"lat": str(end['lat']), "lon": str(end['lon']), "name": end['name']} 
 
-    # load = get_busroute_payload(start, viapoints, end)
-    # bus_route = create_bus_route(load)
+    print(user_viaPoints)
 
-    # print(bus_route['viapoints'])
-    # print(bus_route['path'])
+    load = get_busroute_payload(start_point, user_viaPoints, end_point)
+    response = get_driver_route_data(load)
+
+    route_data = getPath(response['features'])
+    properties = response['properties']
+    
+    dic['path'] = route_data['path']
+    dic['viaPoints'] = route_data['viapoints']
+    dic['time'] = int(properties['totalTime'])
+    dic['distance'] = int(properties['totalDistance'])
+
 # 사용자의 경로를 반환
 def userRoute():
+
     user_data = {
         'walking' : {
             'points' : [],
             'path' : [],
             'time' : [],
             'distance' : []
-        }
-        ,
+        },
         'bus' : {
             'path' : [],
             'viaPoints' : [],
@@ -164,34 +176,42 @@ def userRoute():
     set_walking_data(route, user_data['walking'])
     # print(get_around_busstop(str(37.39725123), str(126.95650002)))
     
-    set_bus_data(route[1], route[2], user_data)
+    set_bus_data(route[1], route[2], user_data['bus'])
     # { 도보 정보 : 
     #   { 입력 지점(위도&경도) : [출발지, 탑승지, 하차지, 목적지]
-    #     경로(위도&경도) : [[출발지-탑승지], [하차지-목적지]],
+    #     경로(위도&경도) : [[출발지-탑승지], [하차지-목적지]], (경로 그리기 좌표)
     #     시간 : [[출발지-탑승지], [하차지-목적지]],  
     #     거리 : [[출발지-탑승지], [하차지-목적지]]
     #   },
     #  차도 정보 : {
-    #     경로(위도&경도) : [경로 ...],
+    #     경로(위도&경도) : [경로 ...], (경로 그리기 좌표)
     #     경유지(위도&경도) : [지점 ...],
     #     시간 : 시간,
     #     거리 : 거리
     #   }
     # }
+    return user_data
 
-    dumps_data(user_data['walking'])
-    dumps_data(user_data['bus'])
-    dumps_data(user_data)
-    return dumps(user_data)
+def get_driver_route_data(payload):
+    apiUrl = url + "/routeOptimization10?version=1"
+    response = requests.post(apiUrl, json=payload, headers=headers)
+    return loads(response.text)
 
+# data: API JSON data
+def set_driver_data(start, viapoints, end, dic):
+    load = get_busroute_payload(start, viapoints, end)
+    response = get_driver_route_data(load)
+
+    route_data = getPath(response['features'])
+    properties = response['properties']
+
+    dic['path'] = route_data['path']
+    dic['viaPoints'] = route_data['viapoints']
+    dic['time'] = int(properties['totalTime'])
+    dic['distance'] = int(properties['totalDistance'])
+     
 # 운전자의 경로를 반환
 def driverRoute():
-    driver_data = {
-        'path': [],
-        'viaPoints' : [],
-        'time' : [],
-        'distance' : []
-    }
 
     # 클러스터링 데이터
     start = {"lat": "37.39641804", "lon": "126.95858318", "name": "세경아파트후문[버스정류장]"} 
@@ -206,17 +226,11 @@ def driverRoute():
     ]
     end = {"lat": "37.50335308", "lon": "127.12639824", "name": "오금동현대아파트[버스정류장]"}
 
-    load = get_busroute_payload(start, viapoints, end)
-    
-    # { 경로 : [경로 ...],
-    #   경유지정보 : [경유지 ...],
+    set_driver_data(start, viapoints, end, driver_data)
+    # { 
+    #   경로 : [경로 ...], (경로 그리기)
     #   경유지 : [경유지 ...],
     #   시간 : 시간,
     #   거리 : 거리
     # }
-    for viapoint in viapoints:
-        dumps(viapoint, ensure_ascii=False)
-    
-    bus_route = create_bus_route(load)
-    driver_data['path'] = bus_route['path']
     return driver_data

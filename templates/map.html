@@ -35,14 +35,15 @@
             let user_type = document.querySelector("#user_type").value;
 
             let user_info = JSON.parse("{{user_info|escapejs}}");
-            let passenger_path = user_info.walking.path 
-            // let passenger_path = JSON.parse("{{passenger_path}}");
-
-            // let bus_route = JSON.parse("{{bus_route}}");
-            // console.log(bus_route);
-
-            // let viapoints = JSON.parse("{{viapoints|escapejs}}");
-
+            let bus_info = JSON.parse("{{bus_info|escapejs}}");
+            
+            let userPassengerPath = user_info.walking.path; 
+            let userBusRoute = user_info.bus.path;
+            
+            let driverPath = bus_info.path;
+            console.log(user_info);
+            console.log(bus_info);
+       
             if (resultdrawArr.length > 0) {
                 for (var i in resultdrawArr) {
                     resultdrawArr[i].setMap(null);
@@ -51,13 +52,13 @@
             }
 
             if (user_type === 'passenger') {
-                passenger_path.forEach((route) => {
-                    drawPedestrianRoute(route);
+                userPassengerPath.forEach((route) => {
+                    drawRoute(route, "#0000ff");
                 })
-                //drawDriverRoute(bus_route);
+                drawRoute(userBusRoute, "#ff0000");
             }
             else {
-                drawDriverRoute(bus_route);
+                drawRoute(driverPath, "#ff0000");
             }
 
             // console.log(passenger_route);
@@ -71,7 +72,7 @@
             //     setMarker(point.viaY, point.viaX, iconUrl, new Tmapv2.Size(8, 8))
             // })
             
-            map.setZoom(13);
+            // map.setZoom(13);
             // 경로 리스트 지도 측면에 생성하기
         });
 
@@ -87,30 +88,16 @@
         });
     }
 
-    function drawPedestrianRoute(fullpath) {
+    function drawRoute(fullpath,color) {
         let drawInfo = [];
-        fullpath.forEach((path, index) => {
-            path.forEach((point) => {
-                let latlng = new Tmapv2.LatLng(
+        fullpath.forEach((point) => {
+            let latlng = new Tmapv2.LatLng(
                     point[1], point[0]);
                 drawInfo.push(latlng);
-            });
-            drawLine(drawInfo, "#0000ff");
+            drawLine(drawInfo, color);
         });
     }
 
-    function drawDriverRoute(fullpath) {
-        let drawInfo = [];
-        fullpath.forEach((path, index) => {
-            path.forEach((point) => {
-
-                let latlng = new Tmapv2.LatLng(
-                    point[1], point[0]);
-                drawInfo.push(latlng);
-            });
-            drawLine(drawInfo, "#ff0000");
-        });
-    }
     // 경로 그리기
     function drawLine(arrPoint, color) {
         var polyline_;
