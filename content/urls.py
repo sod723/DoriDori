@@ -8,7 +8,7 @@ urlpatterns = [
     path('getUsrLatLng/', views.getUsrLatLng, name='getApi'),
     path('SetSpot', views.GetSpotPoint, name='getspotpoint'),
     # path('pathfinder', views.PathFinder, name='pathfinder'),
-    # path('saferoute', views.saferoute, name='saferoute'),
+    path('saferoute', views.saferoute, name='saferoute'),
     # path('userRoute', views.userRoute, name="userRoute"),
     # path('driverRoute', views.driverRoute, name="driverRoute"),
 ]
