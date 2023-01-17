@@ -11,6 +11,8 @@ from django.http.response import HttpResponse
 import json, requests
 from content.models import Content
 from . import RouteSearch
+
+
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
@@ -365,9 +367,10 @@ def PathFinder(request):
 def GetSpotPoint(request):
     start_coordinate = getLatLng(request.POST.get('StartAddr'))
     end_coordinate = getLatLng(request.POST.get('EndAddr'))
-
-    context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
-
+    if request.user.is_authenticated:
+        id=request.user.id
+        content=Content(user_id=id,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1]).save()
+        context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
     return HttpResponse(json.dumps(context), content_type='application/json')
 
 
