@@ -13,9 +13,10 @@
   <!-- leaflet locate control -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js"
+          charset="utf-8"></script>
 
-<!-- map api -->
+  <!-- map api -->
   <script defer src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script> <!-- 주소검색 api-->
   <script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=l7xxcf22dfc606b84851aa80fef36db0a258"></script>
 
@@ -67,8 +68,7 @@
           //도착
           marker_e = new Tmapv2.Marker(
               {
-                  position: new Tmapv2.LatLng(37.403049076341794,
-                      127.10331814639885),
+                  position: new Tmapv2.LatLng(37.403049076341794, 127.10331814639885),
                   icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_e.png",
                   iconSize: new Tmapv2.Size(24, 38),
                   map: map
@@ -91,10 +91,10 @@
                   async: false,
                   data: {
                       "appKey": "l7xx846db5f3bc1e48d29b7275a745d501c8",
-                      "startX": "126.9850380932383",
-                      "startY": "37.566567545861645",
-                      "endX": "127.10331814639885",
-                      "endY": "37.403049076341794",
+                      "startX": resultArray['startaddr'][1],
+                      "startY": resultArray['startaddr'][0],
+                      "endX": resultArray['endaddr'][1],
+                      "endY": resultArray['endaddr'][0],
                       "reqCoordType": "WGS84GEO",
                       "resCoordType": "EPSG3857",
                       "searchOption": searchOption,
@@ -525,10 +525,10 @@
   {#  #}
 
   <!-- 전체 지도 -->
-{#    <div id='map'>#}
-{#      <!-- {{map|safe}} -->#}
-{#    </div>#}
-{#    </body>#}
+  {#    <div id='map'>#}
+  {#      <!-- {{map|safe}} -->#}
+  {#    </div>#}
+  {#    </body>#}
 
 
 
