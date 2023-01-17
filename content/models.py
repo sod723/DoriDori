@@ -11,6 +11,21 @@ class Content(models.Model):
 
 
 
+class Start_Stop(models.Model):
+    bus_group=models.TextField()
+    user_id=models.TextField()
+    s_latitude = models.FloatField(default = True)
+    s_longitude = models.FloatField(default = True)
+
+    class Meta:
+        db_table='start_stop'
+
+class User_Stop(models.Model):
+    user_id=models.TextField()
+    bus_id=models.TextField()
+
+    class Meta:
+        db_table='user_stop'
 
 
 class Alltimeshop(models.Model):

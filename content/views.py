@@ -10,8 +10,10 @@ from urllib.parse import urlencode
 from django.http.response import HttpResponse
 import json, requests
 from content.models import Content
+from content.models import Start_Stop
+from content.models import User_Stop
 from . import RouteSearch
-
+from sklearn.cluster import KMeans
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -36,7 +38,7 @@ load = {
 url = "https://apis.openapi.sk.com/tmap/routes"
 
 g = geocoder.ip('me')
-
+bus_group=0
 def map(request):
     # user info return
     map = folium.Map(location=g.latlng, zoom_start=15, width='100%', height='100%', )
@@ -376,14 +378,11 @@ def GetSpotPoint(request):
             content.e_latitude=end_coordinate[0]
             content.e_longitude=end_coordinate[1]
             content.save()
-            context = {'startaddr_': start_coordinate, 'endaddr': end_coordinate}
-            return HttpResponse(json.dumps(context), content_type='application/json')
         else:
             content=Content(user_id=userid,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1]).save()
             context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
-            return HttpResponse(json.dumps(context), content_type='application/json')
-        #context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
-        #return HttpResponse(json.dumps(context), content_type='application/json')
+        context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
+        return HttpResponse(json.dumps(context), content_type='application/json')
     else:
         print("heelo")
         #회원가입창으로 돌려야하는기능구현해야함
@@ -398,5 +397,30 @@ def getLatLng(addr):
     match_first = result['documents'][0]['address']
 
     return float(match_first['y']), float(match_first['x'])
+
+def start_clustering():
+    rows = Content.objects.count()
+    cols = 2
+    arr = [[0 for j in range(cols)] for i in range(rows)]
+    bus_group=Start_Stop.objects.count()/4
+    for people in range(rows):
+            content=Content.objects.get(id=people+1)
+            arr[people][0]=content.s_longitude
+            arr[people][1]=content.s_latitude
+    km = KMeans(n_clusters=4, init='k-means++', random_state=10)
+    start_km=km.fit_predict(arr)
+    for i in range(4):
+        center_x=km.cluster_centers_[i][0]
+        center_y = km.cluster_centers_[i][1]
+        start=Start_Stop(bus_group=bus_group,s_longitude=center_x,s_latitude=center_y).save()
+
+    for people in range(rows):
+        content = Content.objects.get(id=people+1)
+        start=Start_Stop.objects.get(id=start_km[people]+4*bus_group)
+        User_Stop(user_id=content.user_id,bus_id=start.id).save()
+    print(km.cluster_centers_)
+    return start_km
+
+
 
 
