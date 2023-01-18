@@ -1,15 +1,41 @@
+import geocoder
+from folium import plugins
+import folium
+from haversine import haversine  # 거리측정
 from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+
 from content.models import Content
-from json import dumps, loads
-import requests
+from json import dumps
+from json import loads
+from urllib.parse import urlencode
+from django.http.response import HttpResponse
+import json, requests
+from content.models import Content
+
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from django.core import serializers
+
 
 headers = {
     "accept": "application/json",
     "content-type": "application/json",
-    "appKey": "l7xx846db5f3bc1e48d29b7275a745d501c8" #my app key
+    "appKey": "l7xx846db5f3bc1e48d29b7275a745d501c8"  # my app key
+}
+
+load = {
+    "startX": 0,
+    "startY": 0,
+    "endX": 0,
+    "endY": 0,
+    "startName": "",
+    "endName": "",
 }
 
 url = "https://apis.openapi.sk.com/tmap/routes"
+
 
 driver_data = {
         'path': [],
@@ -18,14 +44,31 @@ driver_data = {
         'distance' : []
 }
 
+g = geocoder.ip('me')
+
 def map(request):
-    bus_info = driverRoute()
-    user_info = userRoute()
+    # user info return
+    map = folium.Map(location=g.latlng, zoom_start=15, width='100%', height='100%', )
+    plugins.LocateControl().add_to(map)
+    plugins.Geocoder().add_to(map)
+
+    maps = map._repr_html_()  # 지도를 템플릿에 삽입하기위해 iframe이 있는 문자열로 반환 (folium)
     
+    # bus_info = driverRoute()
+    # user_info = userRoute()
+
     return render(request, "map.html", {
-        "user_info" : dumps(user_info),
-        "bus_info": dumps(bus_info) 
-    })
+                                        'map': maps,
+                                        'content' : Content,
+                                        # 'user_info' : dumps(user_info),
+                                        # 'bus_info': dumps(bus_info)
+                                        })
+
+def getUsrLatLng(request):
+    content = Content.objects.all()
+    content_list = serializers.serialize('json', content)
+    return HttpResponse(content_list, content_type="text/json=comment-filtered")
+
 
 # 위도 경도 => 근처 버스정류장 정보 return
 # parameter : 클러스터링한 위도 경도(문자열)
@@ -171,7 +214,7 @@ def userRoute():
     route = [{"lat": 37.39725123, "lon": 126.95650002, "name": "한가람신라아파트"},
              {"lat": 37.39641804, "lon": 126.95858318, "name": "세경아파트후문[버스정류장]"},
              {"lat": 37.49093773, "lon": 127.11953810, "name": "문정로데오거리입구[버스정류장]"},
-             {"lat": 37.49632607, "lon": 127.12345426, "name": "국립경찰병원", }]
+             {"lat": 37.49632607, "lon": 127.12345426, "name": "국립경찰병원"}]
     
     set_walking_data(route, user_data['walking'])
     # print(get_around_busstop(str(37.39725123), str(126.95650002)))
@@ -234,3 +277,71 @@ def driverRoute():
     #   거리 : 거리
     # }
     return driver_data
+
+###########################################################
+
+def getLatLng(addr):
+    url = 'https://dapi.kakao.com/v2/local/search/address.json?query=' + addr
+    headers = {"Authorization": "KakaoAK 894cfd738b31d10baba806317025d155"}
+    result = json.loads(str(requests.get(url, headers=headers).text))
+    match_first = result['documents'][0]['address']
+
+    return float(match_first['y']), float(match_first['x'])
+
+    
+def GetSpotPoint(request):
+    start_coordinate = getLatLng(request.POST.get('StartAddr'))
+    end_coordinate = getLatLng(request.POST.get('EndAddr'))
+    code = request.POST.get('code')
+
+    print(code)
+    if request.user.is_authenticated:
+        userid=request.user.id
+        if Content.objects.filter(user_id=userid).exists():
+            content=Content.objects.get(user_id=userid)
+            content.s_latitude=start_coordinate[0]
+            content.s_longitude=start_coordinate[1]
+            content.e_latitude=end_coordinate[0]
+            content.e_longitude=end_coordinate[1]
+            content.save()
+        else:
+            content=Content(user_id=userid,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1]).save()
+        # start_clustering()
+        context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
+        return HttpResponse(json.dumps(context), content_type='application/json')
+    else:
+        #회원가입창으로 돌려야하는기능구현해야함
+        return HttpResponse('/user/login')
+
+
+
+def getLatLng(addr):
+    url = 'https://dapi.kakao.com/v2/local/search/address.json?query=' + addr
+    headers = {"Authorization": "KakaoAK 894cfd738b31d10baba806317025d155"}
+    result = json.loads(str(requests.get(url, headers=headers).text))
+    match_first = result['documents'][0]['address']
+    return float(match_first['y']), float(match_first['x'])
+
+# def start_clustering():
+#     rows = Content.objects.count()
+#     cols = 2
+#     arr = [[0 for j in range(cols)] for i in range(rows)]
+#     bus_group=Start_Stop.objects.count()/4
+#     for people in range(rows):
+#             content=Content.objects.get(id=people+1)
+#             arr[people][0]=content.s_longitude
+#             arr[people][1]=content.s_latitude
+#     km = KMeans(n_clusters=2, init='k-means++', random_state=10)
+#     start_km=km.fit_predict(arr)
+#     for i in range(2):
+#         center_x=km.cluster_centers_[i][0]
+#         center_y = km.cluster_centers_[i][1]
+#         start=Start_Stop(bus_group=bus_group,s_longitude=km.cluster_centers_[i][0],s_latitude=km.cluster_centers_[i][1]).save()
+#         print(center_x, center_y)
+
+#     for people in range(rows):
+#         content = Content.objects.get(id=people+1)
+#         start=Start_Stop.objects.get(id=start_km[people]+4*bus_group)
+#         User_Stop(user_id=content.user_id,bus_id=start.id).save()
+#     print(km.cluster_centers_)
+#     return start_km
