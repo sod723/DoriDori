@@ -3,6 +3,8 @@ from folium import plugins
 import folium
 from haversine import haversine  # 거리측정
 from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+
 from content.models import Content
 from json import dumps
 from json import loads
@@ -228,10 +230,22 @@ def driverRoute():
 def GetSpotPoint(request):
     start_coordinate = getLatLng(request.POST.get('StartAddr'))
     end_coordinate = getLatLng(request.POST.get('EndAddr'))
+    if request.user.is_authenticated:
+        userid = request.user.id
+        if Content.objects.filter(user_id=userid).exists():
+            content = Content.objects.get(user_id=userid)
+            content.s_latitude = start_coordinate[0]
+            content.s_longitude = start_coordinate[1]
+            content.e_latitude = end_coordinate[0]
+            content.e_longitude = end_coordinate[1]
+            content.save()
+        else:
+            content = Content(user_id=User.objects.get(pk=userid), s_latitude=start_coordinate[0], s_longitude=start_coordinate[1],
+                              e_latitude=end_coordinate[0], e_longitude=end_coordinate[1]).save()
 
     context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
-
     return HttpResponse(json.dumps(context), content_type='application/json')
+
 
 
 def getLatLng(addr):
