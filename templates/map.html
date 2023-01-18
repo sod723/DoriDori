@@ -44,35 +44,56 @@
       var resultMarkerArr = [];
       var pointArr = [];
 
+      var usrlat = "37.49241689559544";
+      var usrlon = "127.03171389453507";
+
+
+      var posOptions = {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 60000
+      };
+      function success(pos) {
+          var crd = pos.coords;
+          console.log('Your current position is:');
+          console.log('Latitude : ' + crd.latitude);
+          usrlat = crd.latitude;
+          console.log('Longitude: ' + crd.longitude);
+          usrlon = crd.longitude
+          console.log('More or less ' + crd.accuracy + ' meters.');
+
+          this.lat = crd.latitude;
+          this.lon = crd.longitude;
+          //alert(lat + " / " + lon);
+      };
+      function error(err) {
+          console.warn('ERROR(' + err.code + '): ' + err.message);
+          alert('ERROR(' + err.code + '): ' + err.message);
+      };
+
+      if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(success, error, posOptions);
+      }
+      //  alert("내용부분 : " + this.lat + " / " + this.lon);
+
+
+
       function initTmap() {
           // 1. 지도 띄우기
           {#let content = JSON.parse("{{ content | safe }}")#}
           {#console.log(content);#}
+          {#console.log(latitude)#}
+
+
           map = new Tmapv2.Map("map_div", {
-              center: new Tmapv2.LatLng(37.49241689559544, 127.03171389453507),
+              center: new Tmapv2.LatLng(usrlat, usrlon),
               width: "100%",
               height: "400px",
               zoom: 11,
               zoomControl: true,
               scrollwheel: true
           });
-          // 2. 시작, 도착 심볼찍기
-          // 시작
-          marker_s = new Tmapv2.Marker(
-              {
-                  position: new Tmapv2.LatLng(37.566567545861645, 126.9850380932383),
-                  icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png",
-                  iconSize: new Tmapv2.Size(24, 38),
-                  map: map
-              });
-          //도착
-          marker_e = new Tmapv2.Marker(
-              {
-                  position: new Tmapv2.LatLng(37.403049076341794, 127.10331814639885),
-                  icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_e.png",
-                  iconSize: new Tmapv2.Size(24, 38),
-                  map: map
-              });
+
 
           // 3. 경로탐색 API 사용요청
           $("#btn_select").click(function () {
@@ -452,11 +473,10 @@
         </div>
       </div>
       <div id="search-btn" class="btn-group btn-group-lg" role="group" aria-label="...">
-        <button id='find_botton' type="button" class="btn btn-dark">길찾기</button>
+        <button id='find_botton' type="button" class="btn btn-dark">위치저장</button>
       </div>
     </div>
   </div>
-
   <section id="breadcrumbs" class="breadcrumbs">
     <div class="container">
 
@@ -481,8 +501,7 @@
               <option value="Y">Y</option>
               <option value="N">N</option>
             </select>
-              <button id="btn_select">적용하기</button>
-              <button id="find_button">길찾기</button>
+              <button id="btn_select" type="button" class="btn btn-dark">길찾기</button>
 
             </div>
           </div>
