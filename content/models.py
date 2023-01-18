@@ -7,6 +7,7 @@ class Content(models.Model):
     s_longitude = models.FloatField(default = True)
     e_latitude = models.FloatField(default=True)
     e_longitude = models.FloatField(default=True)
+    sigungucode= models.TextField(null=True, default='')
     boarding_time = models.TextField()
 
 
@@ -14,6 +15,7 @@ class Content(models.Model):
 class Start_Stop(models.Model):
     bus_group=models.TextField()
     user_id=models.TextField()
+    bus_name=models.TextField(null=True, default='')
     s_latitude = models.FloatField(default = True)
     s_longitude = models.FloatField(default = True)
 
@@ -23,6 +25,7 @@ class Start_Stop(models.Model):
 class User_Stop(models.Model):
     user_id=models.TextField()
     bus_id=models.TextField()
+    bus_name=models.TextField(null=True, default='')
 
     class Meta:
         db_table='user_stop'

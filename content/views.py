@@ -369,6 +369,9 @@ def PathFinder(request):
 def GetSpotPoint(request):
     start_coordinate = getLatLng(request.POST.get('StartAddr'))
     end_coordinate = getLatLng(request.POST.get('EndAddr'))
+    print(request.POST.get('code'))
+
+
     if request.user.is_authenticated:
         userid=request.user.id
         if Content.objects.filter(user_id=userid).exists():
@@ -379,14 +382,15 @@ def GetSpotPoint(request):
             content.e_longitude=end_coordinate[1]
             content.save()
         else:
-            content=Content(user_id=userid,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1]).save()
-        start_clustering()
+            content=Content(user_id=userid,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1],
+                            ).save()
+
         context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
         return HttpResponse(json.dumps(context), content_type='application/json')
     else:
         print("heelo")
         #회원가입창으로 돌려야하는기능구현해야함
-        return render(request,'../templates/home.html')
+        return HttpResponse('/user/login')
 
 
 
@@ -411,14 +415,21 @@ def start_clustering():
     for i in range(2):
         center_x=km.cluster_centers_[i][0]
         center_y = km.cluster_centers_[i][1]
-        start=Start_Stop(bus_group=bus_group,s_longitude=km.cluster_centers_[i][0],s_latitude=km.cluster_centers_[i][1]).save()
+        a=str(center_x)
+        b=str(center_y)
+        bus=get_around_busstop(b,a)
+        start=Start_Stop(bus_group=bus_group,s_longitude=bus['lon'],s_latitude=bus['lat'],bus_name=bus['name']).save()
 
     for people in range(rows):
         content = Content.objects.get(id=people+1)
         start=Start_Stop.objects.get(id=start_km[people]+4*bus_group)
-        User_Stop(user_id=content.user_id,bus_id=start.id).save()
+        User_Stop(user_id=content.user_id,bus_id=start.id,bus_name=start.bus_name).save()
     print(km.cluster_centers_)
     return start_km
+
+
+
+
 
 
 

@@ -10,6 +10,9 @@ var start_x;
 var start_y;
 var resultArray = []; //출발지, 목적지 좌표
 
+var startcode;
+var endcode;
+let code = '';
 
 $(document).ready(function () {
     $('.route-wrap').hide()
@@ -98,7 +101,7 @@ input.onclick = function () {
             if (extraRoadAddr !== '') {
                 extraRoadAddr = ' (' + extraRoadAddr + ')';
             }
-
+            startcode = data.sigunguCode;
             // 우편번호와 주소 정보를 해당 필드에 넣는다.
             // document.getElementById('sample4_postcode').value = data.zonecode;
             // document.getElementById("sample4_roadAddress").value = roadAddr;
@@ -128,7 +131,7 @@ output.onclick = function () {
             if (extraRoadAddr !== '') {
                 extraRoadAddr = ' (' + extraRoadAddr + ')';
             }
-
+             endcode= data.sigunguCode;
             //set value 도로명 주소
             document.getElementById("EndAddr").value = roadAddr;
         }
@@ -141,8 +144,8 @@ $("#find_botton").click(function () {
     shortestRoute = []    //초기화
     safeRoute = []
 
-
-
+    code=startcode+endcode;
+    console.log(code);
 
 
     //출발지 목적지 주소 -> 좌표변환
@@ -154,12 +157,13 @@ $("#find_botton").click(function () {
             data: {
                 'StartAddr': $('#StartAddr').val(),
                 'EndAddr': $('#EndAddr').val(),
+                'code' : code,
                 'csrfmiddlewaretoken': csrftoken,
             },
 
             success: (result) => {
                 resultArray = result;
-                console.log(resultArray)
+                console.log(resultArray);
                 succ(result);  //성공하면 검색결과 처리
             },
             fail: (error) => {
@@ -169,8 +173,15 @@ $("#find_botton").click(function () {
         });
         //resultArray : startaddr, endaddr 좌표
     }).then((arg) => {
-        // console.log(resultArray);
+        // 로그인 안되어있을 시 로그인 창으로 이동
+        if(!resultArray['startaddr']){
+            window.location.href = resultArray;
+            return;
+        }
+
+        console.log(resultArray);
         console.log('좌표변환후 최단거리 실행');
+
         $.ajax({
             type: "POST",
             url: "https://apis.openapi.sk.com/tmap/routes?version=1&format=json&callback=result",
