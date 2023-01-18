@@ -10,7 +10,7 @@ from urllib.parse import urlencode
 from django.http.response import HttpResponse
 import json, requests
 from content.models import Content
-from content.models import Start_Stop
+from content.models import Bus_Stop
 from content.models import User_Stop
 from . import RouteSearch
 from sklearn.cluster import KMeans
@@ -369,9 +369,7 @@ def PathFinder(request):
 def GetSpotPoint(request):
     start_coordinate = getLatLng(request.POST.get('StartAddr'))
     end_coordinate = getLatLng(request.POST.get('EndAddr'))
-    print(request.POST.get('code'))
-
-
+    code=request.POST.get('code')
     if request.user.is_authenticated:
         userid=request.user.id
         if Content.objects.filter(user_id=userid).exists():
@@ -380,9 +378,11 @@ def GetSpotPoint(request):
             content.s_longitude=start_coordinate[1]
             content.e_latitude=end_coordinate[0]
             content.e_longitude=end_coordinate[1]
+            content.sigungucode=code
+            start_clustering(userid)
             content.save()
         else:
-            content=Content(user_id=userid,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1],
+            content=Content(user_id=userid,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1],sigungucode=code
                             ).save()
 
         context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
@@ -401,24 +401,55 @@ def getLatLng(addr):
     match_first = result['documents'][0]['address']
     return float(match_first['y']), float(match_first['x'])
 
-def start_clustering():
+def start_clustering(user_id):
+    user_content=Content.objects.get(user_id=user_id)
+    rows = Content.objects.filter(sigungucode=user_content.sigungucode).count()
+    cols = 2
+    index=0
+    arr = [[0 for j in range(cols)] for i in range(rows)]
+    bus_group=Bus_Stop.objects.count()/4
+    for people in Content.objects.filter(sigungucode=user_content.sigungucode).all():
+        print(people.user_id)
+        arr[index][0]=people.s_longitude
+        arr[index][1]=people.s_latitude
+        index+=1
+    km = KMeans(n_clusters=4, init='k-means++', random_state=10)
+    start_km=km.fit_predict(arr)
+    for i in range(4):
+        center_x=km.cluster_centers_[i][0]
+        center_y = km.cluster_centers_[i][1]
+        a=str(center_x)
+        b=str(center_y)
+        bus=get_around_busstop(b,a)
+        start=Bus_Stop(bus_group=bus_group,longitude=bus['lon'],latitude=bus['lat'],bus_name=bus['name'],start_or_end=0).save()
+    index=0;
+    print(start_km)
+    for people in Content.objects.filter(sigungucode=user_content.sigungucode).all():
+        start=Bus_Stop.objects.get(id=start_km[index]+4*bus_group+1)
+        User_Stop(user_id=people.user_id,start_bus_id=start.id,start_bus_name=start.bus_name).save()
+        index+=1
+    print(km.cluster_centers_)
+    return start_km
+
+'''
+def end_clustering():
     rows = Content.objects.count()
     cols = 2
     arr = [[0 for j in range(cols)] for i in range(rows)]
     bus_group=Start_Stop.objects.count()/4
     for people in range(rows):
             content=Content.objects.get(id=people+1)
-            arr[people][0]=content.s_longitude
-            arr[people][1]=content.s_latitude
-    km = KMeans(n_clusters=2, init='k-means++', random_state=10)
-    start_km=km.fit_predict(arr)
+            arr[people][0]=content.e_longitude
+            arr[people][1]=content.e_latitude
+    km = KMeans(n_clusters=4, init='k-means++', random_state=10)
+    end_km=km.fit_predict(arr)
     for i in range(2):
         center_x=km.cluster_centers_[i][0]
         center_y = km.cluster_centers_[i][1]
         a=str(center_x)
         b=str(center_y)
         bus=get_around_busstop(b,a)
-        start=Start_Stop(bus_group=bus_group,s_longitude=bus['lon'],s_latitude=bus['lat'],bus_name=bus['name']).save()
+        end=Start_Stop(bus_group=bus_group,s_longitude=bus['lon'],s_latitude=bus['lat'],bus_name=bus['name']).save()
 
     for people in range(rows):
         content = Content.objects.get(id=people+1)
@@ -426,7 +457,7 @@ def start_clustering():
         User_Stop(user_id=content.user_id,bus_id=start.id,bus_name=start.bus_name).save()
     print(km.cluster_centers_)
     return start_km
-
+    '''
 
 
 
