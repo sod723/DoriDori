@@ -10,5 +10,5 @@ urlpatterns = [
     # path('pathfinder', views.PathFinder, name='pathfinder'),
     path('saferoute', views.saferoute, name='saferoute'),
     # path('userRoute', views.userRoute, name="userRoute"),
-    # path('driverRoute', views.driverRoute, name="driverRoute"),
+    path('driverRoute', views.driverRoute, name="driverRoute"),
 ]

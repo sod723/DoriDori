@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8c59ef7d-db4b-4b75-8f52-37f80eacaa51" name="Changes" comment="시군구코드 넘겨받기,비회원일시 로그인화면이동">
+    <list default="true" id="8c59ef7d-db4b-4b75-8f52-37f80eacaa51" name="Changes" comment="같은 시군구코드 사용자끼리 클러스터링,db값 저장">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/board/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/board/migrations/0001_initial.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/content/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/content/migrations/0001_initial.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/content/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/content/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/content/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/content/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/content/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/map.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/map.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,6 +98,7 @@
       <option name="presentableId" value="Default" />
       <updated>1673869291569</updated>
       <workItem from="1673869292800" duration="2115000" />
+      <workItem from="1674044988117" duration="13870000" />
     </task>
     <task id="LOCAL-00001" summary="주소입력,값 넘기기">
       <created>1673925146019</created>
@@ -141,7 +142,14 @@
       <option name="project" value="LOCAL" />
       <updated>1674038121133</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="같은 시군구코드 사용자끼리 클러스터링,db값 저장">
+      <created>1674043909210</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1674043909210</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -177,6 +185,7 @@
     <MESSAGE value="클러스터링" />
     <MESSAGE value="클러스터링 디비완료" />
     <MESSAGE value="시군구코드 넘겨받기,비회원일시 로그인화면이동" />
-    <option name="LAST_COMMIT_MESSAGE" value="시군구코드 넘겨받기,비회원일시 로그인화면이동" />
+    <MESSAGE value="같은 시군구코드 사용자끼리 클러스터링,db값 저장" />
+    <option name="LAST_COMMIT_MESSAGE" value="같은 시군구코드 사용자끼리 클러스터링,db값 저장" />
   </component>
 </project>

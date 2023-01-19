@@ -11,6 +11,7 @@ class Content(models.Model):
     bus_group=models.TextField(null=True, default='')
     s_busid=models.TextField(null=True, default='')
     e_busid = models.TextField(null=True, default='')
+    service=models.TextField(default='0')
     boarding_time = models.TextField()
 
 
@@ -21,6 +22,7 @@ class Bus_Stop(models.Model):
     latitude = models.FloatField(default = True)
     longitude = models.FloatField(default = True)
     start_or_end=models.TextField(null=True, default='')
+    service=models.TextField(default='0')
     class Meta:
         db_table='bus_stop'
 
