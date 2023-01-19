@@ -1,3 +1,5 @@
+import math
+
 import geocoder
 from folium import plugins
 import folium
@@ -21,10 +23,12 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 
+start=0
+end=0
 headers = {
     "accept": "application/json",
     "content-type": "application/json",
-    "appKey": "l7xx846db5f3bc1e48d29b7275a745d501c8"  # my app key
+    "appKey": "l7xxa21398bdba4947eba835e6c00ec9ffaf"  # my app key
 }
 
 load = {
@@ -49,7 +53,8 @@ g = geocoder.ip('me')
 
 
 def map(request):
-    getDriverRoute()
+    userid=request.user.id
+    getDriverRoute(userid)
 
     # user info return
     map = folium.Map(location=g.latlng, zoom_start=15, width='100%', height='100%', )
@@ -62,6 +67,30 @@ def map(request):
         'map': maps,
         'content': Content,
     })
+
+def SetStartEnd(bus_group):
+    print(bus_group)
+    global start
+    global end
+    print(set)
+    c=0
+    for bus1 in Bus_Stop.objects.filter(bus_group=bus_group,start_or_end=0):
+        for bus2 in Bus_Stop.objects.filter(bus_group=bus_group,start_or_end=1):
+            print(bus2)
+            temp = math.sqrt(math.pow(bus1.latitude-bus2.latitude, 2) + math.pow(bus1.longitude-bus2.longitude, 2))
+            print(temp)
+            if temp>c:
+                c=temp
+                start=bus1.id
+                end=bus2.id
+                print(end)
+    s=Bus_Stop.objects.get(id=start)
+    s.first=1
+    s.save()
+    e=Bus_Stop.objects.get(id=end)
+    e.first=1
+    e.save()
+    return s
 
 
 def getUsrLatLng(request):
@@ -219,14 +248,19 @@ def userRoute(request):
             'distance': []
         }
     }
+    user=Content.objects.get(id=request.user.id)
+    startbus=Bus_Stop.objects.get(id=user.s_busid)
+    endbus = Bus_Stop.objects.get(id=user.e_busid)
+    s=Bus_Stop.objects.get(bus_group=user.bus_group,start_or_end=0,first=1)
+    e= Bus_Stop.objects.get(bus_group=user.bus_group, start_or_end=1, first=1)
     # 출발지
     # 탑승지(클러스터링)
     # 하차지(클러스터링)
     # 목적지
-    route = [{"lat": 37.39725123, "lon": 126.95650002, "name": "한가람신라아파트"},
-             {"lat": 37.39641804, "lon": 126.95858318, "name": "세경아파트후문[버스정류장]"},
-             {"lat": 37.49535410, "lon": 127.13128691, "name": "가락2동극동아파트[버스정류장]"},
-             {"lat": 37.49632607, "lon": 127.12345426, "name": "국립경찰병원"}]
+    route = [{"lat": str(s.latitude), "lon": str(s.longitude), "name": s.bus_name},
+             {"lat": str(endbus.latitude), "lon": str(endbus.longitude), "name": endbus.bus_name},
+             {"lat": str(startbus.latitude), "lon": str(startbus.longitude), "name": startbus.bus_name},
+             {"lat": str(e.bus_name), "lon": str(e.bus_name), "name": e.bus_name}]
 
     set_walking_data(route, user_data['walking'])
 
@@ -274,17 +308,20 @@ def driverRoute(request):
     return HttpResponse(dumps(driver_data))
 
 
-def getDriverRoute():
-    startbus=Bus_Stop.objects.filter(bus_group=0,start_or_end=0).first()
-    endbus = Bus_Stop.objects.filter(bus_group=0, start_or_end=1).first()
+def getDriverRoute(userid):
+    user=Content.objects.get(id=userid)
+    print('getdriver')
+    SetStartEnd(user.bus_group)
+    s=Bus_Stop.objects.get(bus_group=user.bus_group,first=1,start_or_end=0)
+    e = Bus_Stop.objects.get(bus_group=user.bus_group, first=1,start_or_end=1)
     # 클러스터링 데이터
-    start = {"lat": str(startbus.latitude), "lon": str(startbus.longitude), "name": startbus.bus_name}
+    start = {"lat": str(s.latitude), "lon": str(s.longitude), "name": s.bus_name}
     print(start)
     viapoints = [
         {"viaPointId": str(bus.id), "viaPointName": bus.bus_name, "viaY": str(bus.latitude),
          "viaX": str(bus.longitude)} for bus in Bus_Stop.objects.filter(bus_group=0).all()]
     print(viapoints)
-    end = {"lat": str(endbus.latitude), "lon": str(endbus.longitude), "name": endbus.bus_name}
+    end = {"lat": str(e.latitude), "lon": str(e.longitude), "name": e.bus_name}
     print(end)
     set_driver_data(start, viapoints, end, driver_data)
     # {
@@ -641,7 +678,4 @@ def first_end_clustering(user_id):
         index+=1
     print(km.cluster_centers_)
     return end_km
-
-
-
 
