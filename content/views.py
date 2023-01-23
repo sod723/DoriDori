@@ -274,10 +274,10 @@ def userRoute(request):
     # 탑승지(클러스터링)
     # 하차지(클러스터링)
     # 목적지
-    route = [{"lat": str(s.latitude), "lon": str(s.longitude), "name": s.bus_name},
+    route = [{"lat": str(user.s_latitude), "lon": str(user.s_longitude), "name": '유저의 집'},
              {"lat": str(startbus.latitude), "lon": str(startbus.longitude), "name": startbus.bus_name},
              {"lat": str(endbus.latitude), "lon": str(endbus.longitude), "name": endbus.bus_name},
-             {"lat": str(e.latitude), "lon": str(e.longitude), "name": e.bus_name}]
+             {"lat": str(user.e_latitude), "lon": str(user.e_longitude), "name": '유저의 회사'}]
 
 
 
