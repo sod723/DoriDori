@@ -206,6 +206,14 @@ def set_walking_data(points, dic):
 
 def slicing_list(start, end, coordi_list):
     print(coordi_list)
+    print('슬라이싱')
+    print(start)
+    print(end)
+    for a in coordi_list:
+        print(a['lat'])
+        a['lat']=str(a['lat'])
+        print(a['lon'])
+        a['lon'] = str(a['lon'])
     start_idx = coordi_list.index(start)
     end_idx = coordi_list.index(end)
 
@@ -213,10 +221,12 @@ def slicing_list(start, end, coordi_list):
 
 
 def set_bus_data(start, end, dic):
-    viaPoints = slicing_list(start, end, driver_data['viaPoints'])
-    print(viaPoints)
-    user_viaPoints = []
     print('setbusdata')
+    print(driver_data['viaPoints'])
+    viaPoints = slicing_list(start, end, driver_data['viaPoints'])
+
+    user_viaPoints = []
+
     start_point = {"lat": str(start['lat']), "lon": str(start['lon']), "name": start['name']}
     for i in range(0, len(viaPoints)):
         user_viaPoints.append(
@@ -226,6 +236,7 @@ def set_bus_data(start, end, dic):
 
     load = get_busroute_payload(start_point, user_viaPoints, end_point)
     response = get_driver_route_data(load)
+    print('셋버스데이터리스폰스')
     print(response)
     route_data = getPath(response['features'])
     properties = response['properties']
@@ -271,7 +282,8 @@ def userRoute(request):
 
 
     set_walking_data(route, user_data['walking'])
-
+    print('루트')
+    print(route[1])
     set_bus_data(route[1], route[2], user_data['bus'])
     # { 도보 정보 :
     #   { 입력 지점(위도&경도) : [출발지, 탑승지, 하차지, 목적지]
@@ -331,6 +343,7 @@ def getDriverRoute(userid):
     print(viapoints)
     end = {"lat": str(first_end[1].latitude), "lon": str(first_end[1].longitude), "name": first_end[1].bus_name}
     print(end)
+    print('setdriverdata')
     set_driver_data(start, viapoints, end, driver_data)
     # {
     #   경로 : [경로 ...], (경로 그리기)
