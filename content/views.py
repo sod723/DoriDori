@@ -54,9 +54,12 @@ g = geocoder.ip('me')
 
 def map(request):
     userid=request.user.id
-    user=Content.objects.get(id=userid)
+    if Content.objects.filter(id=userid).exists():
+        if Content.objects.filter(id=userid,bus_group='').exists():
+            print('')
+        else:
+            getDriverRoute(userid)
 
-    getDriverRoute(userid)
 
     # user info return
     map = folium.Map(location=g.latlng, zoom_start=15, width='100%', height='100%', )
@@ -91,11 +94,7 @@ def SetStartEnd(bus_group):
     end.save()
     return start,end
 
-def ClusterExist(userid):
-    if Content.objects.filter(id=userid,s_busid='').exists():
-        return 1
-    else :
-        return 0
+
 
 def getUsrLatLng(request):
     content = Content.objects.all()
@@ -511,11 +510,12 @@ def GetSpotPoint(request):
             content=Content(user_id=userid,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1],sigungucode=code
                             ).save()
 
-        if ClusterExist(userid) == 1:
+        print('조건문')
+        print(ClusterExist(userid))
+        if ClusterExist(userid)==1:
             first_start_clustering(userid)
             first_end_clustering(userid)
         else:
-            print('else')
             start_clustering(userid)
             end_clustering(userid)
 
@@ -526,6 +526,17 @@ def GetSpotPoint(request):
         #회원가입창으로 돌려야하는기능구현해야함
         return HttpResponse('/user/login')
 
+
+def ClusterExist(userid):
+    if Content.objects.filter(id=userid,s_busid='').exists():
+        content=Content.objects.get(id=userid)
+        if Content.objects.filter(sigungucode=content.sigungucode,service=0,bus_group='').count()>1:
+            return 1 ##클러스터가 아예처음
+        else:
+            return 2
+    else: ##클러스터가 존재하지만 새로운 id가 들어가는경우
+        return 0
+        ##이미있는 id가 누를경우
 
 
 def getLatLng(addr):
@@ -578,11 +589,14 @@ def start_clustering(user_id):
         people.s_busid=start.id
         people.bus_group=bus_group
         people.save()
-        user_stop=User_Stop.objects.get(user_id=people.user_id)
-        user_stop.start_bus_id=start.id
-        user_stop.start_bus_name = start.bus_name
-        user_stop.bus_group = bus_group
-        user_stop.save()
+        if User_Stop.objects.filter(user_id=people.user_id).exists():
+            user_stop=User_Stop.objects.get(user_id=people.user_id)
+            user_stop.start_bus_id=start.id
+            user_stop.start_bus_name = start.bus_name
+            user_stop.bus_group = bus_group
+            user_stop.save()
+        else:
+            User_Stop(user_id=people.user_id,start_bus_id=start.id,start_bus_name=start.bus_name,bus_group=bus_group).save()
         index+=1
     print(km.cluster_centers_)
     return start_km
@@ -621,14 +635,18 @@ def end_clustering(user_id):
         end=Bus_Stop.objects.get(id=end_km[index]+4*bus_group+5)
         print('end id')
         print(end.id)
-        user_stop = User_Stop.objects.get(user_id=people.user_id)
         people.e_busid=end.id
         people.bus_group=bus_group
         people.save()
-        user_stop.end_bus_id = end.id
-        user_stop.end_bus_name = end.bus_name
-        user_stop.bus_group = bus_group
-        user_stop.save()
+        if User_Stop.objects.filter(user_id=people.user_id).exists():
+            user_stop = User_Stop.objects.get(user_id=people.user_id)
+            user_stop.end_bus_id = end.id
+            user_stop.end_bus_name = end.bus_name
+            user_stop.bus_group = bus_group
+            user_stop.save()
+        else:
+            User_Stop(user_id=people.user_id, end_bus_id=end.id, end_bus_name=end.bus_name,
+                      bus_group=bus_group).save()
         index+=1
     print(km.cluster_centers_)
     return end_km
@@ -665,7 +683,14 @@ def first_start_clustering(user_id):
         people.s_busid=start.id
         people.bus_group=bus_group
         people.save()
-        User_Stop(user_id=people.user_id,start_bus_id=start.id,start_bus_name=start.bus_name).save()
+        if User_Stop.objects.filter(user_id=people.user_id).exists():
+            user_stop=User_Stop.objects.filter(id=people.user_id)
+            user_stop.start_bus_id = start.id
+            user_stop.start_bus_id = start.bus_name
+            user_stop.bus_group = bus_group
+            user_stop.save()
+        else:
+            User_Stop(user_id=people.user_id,start_bus_id=start.id,start_bus_name=start.bus_name,bus_group=bus_group).save()
         index+=1
     print(km.cluster_centers_)
     return start_km
