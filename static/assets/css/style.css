@@ -27,6 +27,14 @@ h1, h2, h3, h4, h5, h6 {
     font-family: "Raleway", sans-serif;
 }
 
+ul{
+    margin: 0;
+    padding: 0;
+}
+
+li{
+    list-style: none;
+}
 /*--------------------------------------------------------------
 # Back to top button
 --------------------------------------------------------------*/
@@ -1633,7 +1641,9 @@ html, body {
     height: 100%;
     padding: 10px 35px 5px 10px;
 }
-
+#map_div{
+    position: absolute;
+}
 #start_input, #end_input {
     margin-bottom: 1% !important;
 }
@@ -1649,6 +1659,34 @@ html, body {
 .map_wrap {
     display: flex;
     justify-content: center;
-    padding-top: 50px;
     background-color: #FAFAFA;
+    height: 80vh;
+}
+
+#find_botton {
+    font-size: 1rem;
+}
+
+#search-btn{
+    display: flex;
+}
+
+#search-btn>button{
+    flex: 1;
+    margin-right: 5px;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+#search-btn>button:hover{
+    text-shadow: 0 0 3px white;
+    transition: 0.3s;
+}
+
+#route_container {
+    display: inline-block;
+    position: inherit;
+    left: 22px;
+    z-index: 1;
+    overflow-y: scroll;
 }
