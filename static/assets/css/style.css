@@ -1689,4 +1689,33 @@ html, body {
     left: 22px;
     z-index: 1;
     overflow-y: scroll;
+    font-weight: bold;
+    height: 50%;
+    background-color: (255, 255, 255, 0.7);
+}
+
+#route_container::-webkit-scrollbar { 
+    display: none;  /* Safari and Chrome */
+}
+
+#route_container #route_list {
+    border-bottom: 2px solid;
+}
+
+#route_container #route_list .route {
+    width: fit-content;
+    font-weight: bold;
+}
+
+#route_container #route_list .route div:nth-child(1):hover{
+    color: blue;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#route_container #route_list .route div:nth-child(2){
+    font-size: small;
+    width: 100%;
+    text-align: left;
+    margin: 4px;
 }
