@@ -75,6 +75,8 @@ def map(request):
 
 def SetStartEnd(bus_group):
     c=0
+    bus_set=Bus_Stop.objects.filter(bus_group=bus_group).all()
+    bus_set.update(first='0')
     for bus1 in Bus_Stop.objects.filter(bus_group=bus_group,start_or_end=0):
         for bus2 in Bus_Stop.objects.filter(bus_group=bus_group,start_or_end=1):
             temp = math.sqrt(math.pow(bus1.latitude-bus2.latitude, 2) + math.pow(bus1.longitude-bus2.longitude, 2))
