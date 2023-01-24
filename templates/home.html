@@ -3,21 +3,47 @@
 
 {% block body %}
 
-{% include "navbar.html" %}
 <!-- ======= Hero Section ======= -->
 <section id="hero" class="d-flex align-items-center">
-
+  <link href="home.css" rel="stylesheet" type="text/css" />
   <div class="container">
     <div class="row">
       <div class="col-lg-6 pt-5 pt-lg-0 order-2 order-lg-1 d-flex flex-column justify-content-center">
         <script>
             AOS.init();
         </script>
-        <h1 data-aos="fade-up">나만의 버스노선</h1>
-        <h2 data-aos="fade-up" data-aos-delay="400">빠르고 편안하게</h2>
-        <div data-aos="fade-up" data-aos-delay="800">
-          <a href="/map" class="btn-get-started scrollto">노선만들기</a>
-        </div>
+              <div id="pricing-table" class="clear">
+                <div class="plan" data-aos="fade-up">
+                    <h3>대중교통<span><img src="https://postfiles.pstatic.net/MjAyMzAxMjRfODEg/MDAxNjc0NTM3MDU0MDY3.8ObX6YrwG98R-kkF9hbwWas9eXTH4PVEcY5RCiJoxT4g.ZxKnbqtDC8qTiU9E5vMdyaa4TgU5tsRWVC75oaO_5uwg.PNG.keyhyun0123/%E2%80%94Pngtree%E2%80%94metro_train_line_icon_vector_5079446.png?type=w580" width="60" height="60"></span></h3>
+                  <a class="signup" href="">최악</a>
+                  <ul>
+                        <li><b>2회</b> 평균 환승</li>
+                        <li><b>1시간 30분</b> 평균 소요</li>
+                        <li><b>지옥철</b> 출근길</li>
+                  <li><b>꿀잠출근</b> 불가능</li>			
+                    </ul>    
+                </div>
+                <div class="plan" id="most-popular" data-aos="fade-up">
+                    <h3>도리 셔틀<span><img src="https://postfiles.pstatic.net/MjAyMzAxMjRfNTcg/MDAxNjc0NTM0NDIxMDY2.TYbXVA2kGDfGBs0cq_w-rm-xXW5GX03npGu-XAnoz5Eg.fzQXw5fuFypUF8cXrlF9SvSmIObEnozR4HlsvHz6B5cg.PNG.keyhyun0123/dori-high-resolution-logo-black-on-transparent-background.png?type=w580" width="60" height="60"></span></h3>
+                <a class="signup" href="/map/">신청 하기</a>
+                    <ul>
+                        <li><b>0회</b> 평균 환승</li>
+                        <li><b>1시간</b> 평균 소요</li>
+                        <li><b>저렴한</b> 셔틀버스</li>
+                  <li><b>꿀잠출근</b> 가능</li>			
+                    </ul>
+                </div>
+                <div class="plan" data-aos="fade-up">
+                  <h3>자차<span><img src="https://postfiles.pstatic.net/MjAyMzAxMjRfNTUg/MDAxNjc0NTM3MDU0MDU3.qDrQWJqt94-d6-va5n0z-wZJ9ipJVRk1ksQ24W8e0t8g.slvyMNx-jg8ot-J6B0AJpsx476EmOoPJUXCaUGQ3Xycg.PNG.keyhyun0123/%E2%80%94Pngtree%E2%80%94car_icon_4469243.png?type=w580" width="60" height="60"></span></h3>
+              <a class="signup" href="">비쌈</a>
+                  <ul>
+                      <li><b>0회</b> 평균 환승</li>
+                      <li><b>1시간</b> 평균 소요</li>
+                      <li><b>기름값</b> 월 30</li>
+                <li><b>꿀잠</b> 저승행 </li>			
+                  </ul>
+              </div>
+      </div>
       </div>
       <div class="col-lg-6 order-1 order-lg-2 hero-img" data-aos="fade-left" data-aos-delay="200">
         <img src="{% static 'assets/img/hero-img.png' %}" class="img-fluid animated" alt="">

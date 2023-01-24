@@ -40,9 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.sites',
 
 
-    'board',
     'content',
-    'user',
+    'board.apps.BoardConfig',
+    'user.apps.UserConfig',
     'rest_framework',
 ]
 
@@ -61,7 +61,7 @@ ROOT_URLCONF = 'DoriDori.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
+        'DIRS': [BASE_DIR / 'templates']
         ,
         'APP_DIRS': True,
         'OPTIONS': {
@@ -114,7 +114,7 @@ TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
-USE_TZ = False
+USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
@@ -135,7 +135,13 @@ MODEL_ROOT = os.path.join(BASE_DIR, 'models')
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# 로그인 성공후 이동하는 URL
+LOGIN_REDIRECT_URL = '/'
+
+# 로그아웃시 이동하는 URL
+LOGOUT_REDIRECT_URL = '/'
 
 
 # 커스텀 유저 모델 사용
-AUTH_USER_MODEL = 'user.User'
+# AUTH_USER_MODEL = 'user.User'
+SITE_ID = 1

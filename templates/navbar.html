@@ -1,36 +1,27 @@
-<!-- ======= Header ======= -->
-<header id="header" class="fixed-top d-flex align-items-center">
-  <div class="container d-flex align-items-center justify-content-between">
-
-
-    <div class="logo">
-      <h1><a href="/">DoriDori</a></h1>
-      <!-- Uncomment below if you prefer to use an image logo -->
-      <!-- <a href="index.html"><img src="assets/img/logo.png" alt="" class="img-fluid"></a>-->
-    </div>
-
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">
+      <img src="https://postfiles.pstatic.net/MjAyMzAxMjRfNTcg/MDAxNjc0NTM0NDIxMDY2.TYbXVA2kGDfGBs0cq_w-rm-xXW5GX03npGu-XAnoz5Eg.fzQXw5fuFypUF8cXrlF9SvSmIObEnozR4HlsvHz6B5cg.PNG.keyhyun0123/dori-high-resolution-logo-black-on-transparent-background.png?type=w580" width="60" height="60">
+    </a>
     <nav id="navbar" class="navbar ms-auto">
       <ul>
-        <li><a class="nav-link scrollto active" href="/">Home</a></li>
-        <li><a class="nav-link scrollto" href="/map">Map</a></li>
-        <li><a class="nav-link scrollto" href="/board">Board</a></li>
+          {% if user.is_authenticated %}
+            <a class="nav-link scrollto" href="{% url 'user:logout' %}">{{ user.username }} (Log out)</a>
+          {% else %}
+            <a class="nav-link scrollto" href="{% url 'user:login' %}">Log in</a>
+          {% endif %}
 
-
-{#        <li><a class="getstarted scrollto" href="#about">Log in</a></li>#}
-        <li class="nav-item dropdown scrollto ">
-          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Log in</a>
-          <ul class="dropdown-menu">
-
-            <li><a class="dropdown-item" href="/login">Log in</a></li>
-            <li><a class="dropdown-item" href="/join">Sign up</a></li>
-
-          </ul>
+        <li>
+          {% if not user.is_authenticated %}
+            <a class="nav-link scrollto" href="{% url 'user:signup' %}">Sign up</a>
+          {% endif %}
         </li>
-
+        <li><a class="nav-link scrollto" href="{% url 'board:index' %}">Board</a></li>
+        <li><a class="nav-link scrollto" href="/map">Map</a></li>
 
       </ul>
       <i class="bi bi-list mobile-nav-toggle"></i>
-    </nav><!-- .navbar -->
-
   </div>
-</header><!-- End Header -->
+
+
+</nav>
