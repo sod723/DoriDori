@@ -1,12 +1,7 @@
 import math
-
 import geocoder
-from folium import plugins
-import folium
-from haversine import haversine  # 거리측정
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
-
 from content.models import Content
 from json import dumps
 from json import loads
@@ -17,7 +12,6 @@ from content.models import Content
 from content.models import Bus_Stop
 from content.models import User_Stop
 from sklearn.cluster import KMeans
-from . import RouteSearch
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
@@ -49,7 +43,7 @@ driver_data = {
     'distance': []
 }
 
-g = geocoder.ip('me')
+# g = geocoder.ip('me')
 
 
 def map(request):
@@ -60,16 +54,7 @@ def map(request):
         else:
             getDriverRoute(userid)
 
-
-    # user info return
-    map = folium.Map(location=g.latlng, zoom_start=15, width='100%', height='100%', )
-    plugins.LocateControl().add_to(map)
-    plugins.Geocoder().add_to(map)
-
-    maps = map._repr_html_()  # 지도를 템플릿에 삽입하기위해 iframe이 있는 문자열로 반환 (folium)
-
     return render(request, "map.html", {
-        'map': maps,
         'content': Content,
     })
 
@@ -95,7 +80,6 @@ def getUsrLatLng(request):
     content = Content.objects.all()
     content_list = serializers.serialize('json', content)
     return HttpResponse(content_list, content_type="text/json=comment-filtered")
-
 
 # 위도 경도 => 근처 버스정류장 정보 return
 # parameter : 클러스터링한 위도 경도(문자열)
@@ -333,143 +317,6 @@ def getDriverRoute(userid):
     # }
     return driver_data
 ###########################################################
-def saferoute(request):
-    SafePath = []
-    totalDistance = 0;
-
-    startx = request.POST.get('startX')
-    starty = request.POST.get('startY')
-    endx = request.POST.get('endX')
-    endy = request.POST.get('endY')
-    start_coordinate = [starty, startx]
-    end_coordinate = [endy, endx]
-
-    # type : list(Hmap), grid(Hex), list
-    Hexlist, grid, path, TileValue_map = RouteSearch.startSetting(start_coordinate, end_coordinate)
-    Before_Hex = path[0]
-    increase = [0, 0]  # q,r 증가율
-    count = 1
-
-    for idx, HexPoint in enumerate(path):
-        if Before_Hex is not HexPoint:
-            # 첫 노드 증가율 기록 - 두번째 노드
-            if increase[0] == 0 and increase[1] == 0:
-                x = int(HexPoint[0]) - int(Before_Hex[0])
-                y = int(HexPoint[1]) - int(Before_Hex[1])
-                increase = [x, y]
-                Before_Hex = HexPoint
-
-                continue
-            # 증가율 비교
-            else:
-                x = int(HexPoint[0]) - int(Before_Hex[0])
-                y = int(HexPoint[1]) - int(Before_Hex[1])
-                if increase[0] == x and increase[1] == y:
-                    Before_Hex = HexPoint
-                    continue
-                else:
-                    increase = [x, y]
-
-        # print(count,' ',HexPoint)
-        count += 1
-        Before_Hex = HexPoint
-        geo_center = grid.hex_center(HexPoint)
-        SafePath.append([geo_center.y, geo_center.x])
-
-        if len(SafePath) > 1:
-            totalDistance += haversine(SafePath[len(SafePath) - 2], SafePath[len(SafePath) - 1])
-        increase = [0, 0]
-
-    # 마지막 노드 추가
-    geo_center = grid.hex_center(path[-1])
-    SafePath.append([geo_center.y, geo_center.x])
-    totalDistance += haversine(SafePath[len(SafePath) - 2], SafePath[len(SafePath) - 1])
-
-    print('토탈 거리:', totalDistance)
-    soc = 1 / 16
-    totalTime = totalDistance // soc
-    print('토탈 시간', totalTime)
-    return HttpResponse(json.dumps({'result': SafePath, 'totalDistance': totalDistance, 'totalTime': totalTime}),
-                        content_type="application/json");
-
-
-def PathFinder(request):
-    shortData = []
-    SafePath = []
-    SPoint = []
-
-    # ------------------------- 최단 루트 (SPoint) -----------------------------------------
-    start_coordinate = getLatLng(request.POST.get('StartAddr'))
-    end_coordinate = getLatLng(request.POST.get('EndAddr'))
-
-    shortData = request.POST.get('shortestRoute').split(",")
-
-    for i in shortData:
-        if (shortData.index(i) % 2 == 0):
-            lat = i;  # 위도
-            lon = shortData[(shortData.index(i)) + 1]  # 경도
-            point = [float(lat), float(lon)]
-            SPoint.append(point)
-
-    # -----------------------------맵핑-----------------------------------------
-    map = folium.Map(location=start_coordinate, zoom_start=15, width='100%', height='100%', )
-
-    folium.PolyLine(locations=SPoint, weight=4, color='red').add_to(map)
-
-    folium.Marker(
-        location=start_coordinate,
-        popup=request.POST.get('StartAddr'),
-        icon=folium.Icon(color="red"),
-    ).add_to(map)
-
-    folium.Marker(
-        location=end_coordinate,
-        popup=request.POST.get('EndAddr'),
-        icon=folium.Icon(color="red"),
-    ).add_to(map)
-
-    plugins.LocateControl().add_to(map)
-
-    # ---------------------------안전 루트--------------------------------------
-    # type : list(Hmap), grid(Hex), list
-    Hexlist, grid, path = RouteSearch.startSetting(start_coordinate, end_coordinate)
-    Before_Hex = path[0]
-    increase = [0, 0]  # q,r 증가율
-    count = 1
-
-    for idx, HexPoint in enumerate(path):
-        if Before_Hex is not HexPoint:
-            # 첫 노드 증가율 기록 - 두번째 노드
-            if increase[0] == 0 and increase[1] == 0:
-                x = int(HexPoint[0]) - int(Before_Hex[0])
-                y = int(HexPoint[1]) - int(Before_Hex[1])
-                increase = [x, y]
-                Before_Hex = HexPoint
-
-                continue
-            # 증가율 비교
-            else:
-                x = int(HexPoint[0]) - int(Before_Hex[0])
-                y = int(HexPoint[1]) - int(Before_Hex[1])
-                if increase[0] == x and increase[1] == y:
-                    Before_Hex = HexPoint
-                    continue
-                else:
-                    increase = [x, y]
-
-        print(count, ' ', HexPoint)
-        count += 1
-        Before_Hex = HexPoint
-        geo_center = grid.hex_center(HexPoint)
-        SafePath.append([geo_center.y, geo_center.x])
-
-        increase = [0, 0]
-    folium.PolyLine(locations=SafePath, weight=4, color='blue').add_to(map)
-
-    maps = map._repr_html_()  # 지도를 템플릿에 삽입하기위해 iframe이 있는 문자열로 반환 (folium)
-
-    return render(request, '../templates/home.html', {'map': maps})
-
 
 def GetSpotPoint(request):
     start_coordinate = getLatLng(request.POST.get('StartAddr'))
