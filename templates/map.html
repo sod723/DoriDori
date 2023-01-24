@@ -133,7 +133,13 @@
                             drawRoute(route, "#0000ff");
                         });
                         drawRoute(userBusRoute, "#ff0000");
-                        showPoint(route_info.walking.points);
+                        let userBusTime = route_info.bus.time.reduce((a, b) => a + b, 0);
+                        let userBusDistance = route_info.bus.distance.reduce((a, b) => a + b, 0);
+
+                        route_info.walking.time.splice(1, 0, userBusTime);
+                        route_info.walking.distance.splice(1, 0, userBusDistance);
+                        
+                        showPoint(route_info.walking.points, route_info.walking.time, route_info.walking.distance);
                     }
                     else { // 기사
                         driverPath = route_info.path;
@@ -191,23 +197,8 @@
 
             route_container.appendChild(route);
         }
-
-        // pointArray.forEach((point) => {
-        //     let route = document.createElement('li');
-        //     route.setAttribute('class', 'route');
-        //     route.dataset.lat = point.lat;
-        //     route.dataset.lon = point.lon;
-        //     route.innerHTML = point.name;
-
-        //     let textNode = document.createTextNode();
-        //     route.addEventListener('click', (event) => {
-        //         let coord = new Tmapv2.LatLng(route.dataset.lat, route.dataset.lon);
-        //         map.panTo(coord);
-        //         map.setZoom(13);
-        //     });
-        //     route_container.appendChild(route);
-        // });
     }
+
     function secToHHMMString(sec) {
         let dateString = new Date(sec * 1000).toISOString().slice(11, 16);
         let hour = dateString.slice(0, 2);
@@ -226,7 +217,7 @@
     function mToKmString(m) {
         let km = m / 1000;
         let distanceString;
-        if (km > 0) {
+        if (km > 1) {
             distanceString = km.toFixed(1) + " km";
         } else {
             distanceString = m + " m";
