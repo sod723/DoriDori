@@ -74,19 +74,14 @@ def map(request):
     })
 
 def SetStartEnd(bus_group):
-    print(bus_group)
-    print(set)
     c=0
     for bus1 in Bus_Stop.objects.filter(bus_group=bus_group,start_or_end=0):
         for bus2 in Bus_Stop.objects.filter(bus_group=bus_group,start_or_end=1):
-            print(bus2)
             temp = math.sqrt(math.pow(bus1.latitude-bus2.latitude, 2) + math.pow(bus1.longitude-bus2.longitude, 2))
-            print(temp)
             if temp>c:
                 c=temp
                 start=bus1
                 end=bus2
-                print(end)
 
     start.first=1
     start.save()
@@ -204,14 +199,8 @@ def set_walking_data(points, dic):
 
 
 def slicing_list(start, end, coordi_list):
-    print(coordi_list)
-    print('슬라이싱')
-    print(start)
-    print(end)
     for a in coordi_list:
-        print(a['lat'])
         a['lat']=str(a['lat'])
-        print(a['lon'])
         a['lon'] = str(a['lon'])
     start_idx = coordi_list.index(start)
     end_idx = coordi_list.index(end)
@@ -220,8 +209,6 @@ def slicing_list(start, end, coordi_list):
 
 
 def set_bus_data(start, end, dic):
-    print('setbusdata')
-    print(driver_data['viaPoints'])
     viaPoints = slicing_list(start, end, driver_data['viaPoints'])
 
     user_viaPoints = []
@@ -268,7 +255,6 @@ def userRoute(request):
     endbus = Bus_Stop.objects.get(id=user.e_busid)
     s=Bus_Stop.objects.get(bus_group=user.bus_group,start_or_end=0,first=1)
     e= Bus_Stop.objects.get(bus_group=user.bus_group, start_or_end=1, first=1)
-    print(SetStartEnd(user.bus_group))
     # 출발지
     # 탑승지(클러스터링)
     # 하차지(클러스터링)
@@ -281,8 +267,6 @@ def userRoute(request):
 
 
     set_walking_data(route, user_data['walking'])
-    print('루트')
-    print(route[1])
     set_bus_data(route[1], route[2], user_data['bus'])
     # { 도보 정보 :
     #   { 입력 지점(위도&경도) : [출발지, 탑승지, 하차지, 목적지]
@@ -329,20 +313,17 @@ def driverRoute(request):
 
 def getDriverRoute(userid):
     user=Content.objects.get(id=userid)
-    print('getdriver')
+
     first_end=SetStartEnd(user.bus_group)
-    print('퍼스트엔드')
-    print(first_end)
     # 클러스터링 데이터
     start = {"lat": str(first_end[0].latitude), "lon": str(first_end[0].longitude), "name": first_end[0].bus_name}
-    print(start)
+
     viapoints = [
         {"viaPointId": str(bus.id), "viaPointName": bus.bus_name, "viaY": str(bus.latitude),
          "viaX": str(bus.longitude)} for bus in Bus_Stop.objects.filter(bus_group=0).all()]
-    print(viapoints)
+
     end = {"lat": str(first_end[1].latitude), "lon": str(first_end[1].longitude), "name": first_end[1].bus_name}
-    print(end)
-    print('setdriverdata')
+
     set_driver_data(start, viapoints, end, driver_data)
     # {
     #   경로 : [경로 ...], (경로 그리기)
@@ -504,14 +485,13 @@ def GetSpotPoint(request):
             content.e_longitude=end_coordinate[1]
             content.sigungucode=code
             content.save()
-            print('버스그룹')
+
 
         else:
             content=Content(user_id=userid,s_latitude=start_coordinate[0],s_longitude=start_coordinate[1],e_latitude=end_coordinate[0],e_longitude=end_coordinate[1],sigungucode=code
                             ).save()
 
-        print('조건문')
-        print(ClusterExist(userid))
+
         if ClusterExist(userid)==1:
             first_start_clustering(userid)
             first_end_clustering(userid)
@@ -522,8 +502,8 @@ def GetSpotPoint(request):
         context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
         return HttpResponse(json.dumps(context), content_type='application/json')
     else:
-        print("heelo")
-        #회원가입창으로 돌려야하는기능구현해야함
+
+
         return HttpResponse('/user/login')
 
 
@@ -552,19 +532,15 @@ def start_clustering(user_id):
     cols = 2
     index=0
     arr = [[0 for j in range(cols)] for i in range(rows)]
-    print('버스그룹')
+
     tempCon=Content.objects.filter(sigungucode=user_content.sigungucode,service=0).first()
-    print(tempCon)
-    print(tempCon.bus_group)
+
     bus_group=Bus_Stop.objects.filter(start_or_end=0,service=0,bus_group=tempCon.bus_group).first()
-    print(bus_group)
+
     bus_group=bus_group.bus_group
     bus_group=int(float(bus_group))
-    print('버스그룹')
-    print(bus_group)
 
     for people in Content.objects.filter(sigungucode=user_content.sigungucode).all():
-        print(people.user_id)
         arr[index][0]=people.s_longitude
         arr[index][1]=people.s_latitude
         index+=1
@@ -577,13 +553,13 @@ def start_clustering(user_id):
         b=str(center_y)
         bus=get_around_busstop(b,a)
         start = Bus_Stop.objects.get(id=4 * bus_group + i + 1)
-        print(start)
+
         start.longitude = bus['lon']
         start.latitude = bus['lat']
         start.bus_name = bus['name']
         start.save()
     index=0;
-    print(start_km)
+
     for people in Content.objects.filter(sigungucode=user_content.sigungucode).all():
         start=Bus_Stop.objects.get(id=start_km[index]+4*bus_group+1)
         people.s_busid=start.id
@@ -598,7 +574,7 @@ def start_clustering(user_id):
         else:
             User_Stop(user_id=people.user_id,start_bus_id=start.id,start_bus_name=start.bus_name,bus_group=bus_group).save()
         index+=1
-    print(km.cluster_centers_)
+
     return start_km
 
 def end_clustering(user_id):
@@ -612,7 +588,7 @@ def end_clustering(user_id):
     bus_group=bus_group.bus_group
     bus_group=int(float(bus_group))
     for people in Content.objects.filter(sigungucode=user_content.sigungucode,service=0).all():
-        print(people.user_id)
+
         arr[index][0]=people.e_longitude
         arr[index][1]=people.e_latitude
         index+=1
@@ -630,11 +606,11 @@ def end_clustering(user_id):
         end.bus_name=bus['name']
         end.save()
     index=0;
-    print(end_km)
+
     for people in Content.objects.filter(sigungucode=user_content.sigungucode,service=0).all():
         end=Bus_Stop.objects.get(id=end_km[index]+4*bus_group+5)
-        print('end id')
-        print(end.id)
+
+
         people.e_busid=end.id
         people.bus_group=bus_group
         people.save()
@@ -648,7 +624,7 @@ def end_clustering(user_id):
             User_Stop(user_id=people.user_id, end_bus_id=end.id, end_bus_name=end.bus_name,
                       bus_group=bus_group).save()
         index+=1
-    print(km.cluster_centers_)
+
     return end_km
 
 
@@ -662,7 +638,7 @@ def first_start_clustering(user_id):
     bus_group=Bus_Stop.objects.filter(start_or_end=0).count()/4
     bus_group=int(bus_group)
     for people in Content.objects.filter(sigungucode=user_content.sigungucode,service=0).all():
-        print(people.user_id)
+
         arr[index][0]=people.s_longitude
         arr[index][1]=people.s_latitude
         index+=1
@@ -676,7 +652,7 @@ def first_start_clustering(user_id):
         bus=get_around_busstop(b,a)
         start=Bus_Stop(bus_group=bus_group,longitude=bus['lon'],latitude=bus['lat'],bus_name=bus['name'],start_or_end=0).save()
     index=0;
-    print(start_km)
+
     for people in Content.objects.filter(sigungucode=user_content.sigungucode,service=0).all():
         start=Bus_Stop.objects.get(id=start_km[index]+4*bus_group+1)
 
@@ -692,7 +668,7 @@ def first_start_clustering(user_id):
         else:
             User_Stop(user_id=people.user_id,start_bus_id=start.id,start_bus_name=start.bus_name,bus_group=bus_group).save()
         index+=1
-    print(km.cluster_centers_)
+
     return start_km
 
 def first_end_clustering(user_id):
@@ -704,7 +680,7 @@ def first_end_clustering(user_id):
     bus_group=Bus_Stop.objects.filter(start_or_end=1).count()/4
     bus_group = int(bus_group)
     for people in Content.objects.filter(sigungucode=user_content.sigungucode,service=0).all():
-        print(people.user_id)
+
         arr[index][0]=people.e_longitude
         arr[index][1]=people.e_latitude
         index+=1
@@ -718,7 +694,7 @@ def first_end_clustering(user_id):
         bus=get_around_busstop(b,a)
         end=Bus_Stop(bus_group=bus_group,longitude=bus['lon'],latitude=bus['lat'],bus_name=bus['name'],start_or_end=1).save()
     index=0;
-    print(end_km)
+
     for people in Content.objects.filter(sigungucode=user_content.sigungucode,service=0).all():
         end=Bus_Stop.objects.get(id=end_km[index]+4*bus_group+1)
         people.e_busid=end.id
@@ -730,6 +706,5 @@ def first_end_clustering(user_id):
         user_stop.bus_group = bus_group
         user_stop.save()
         index+=1
-    print(km.cluster_centers_)
     return end_km
 
