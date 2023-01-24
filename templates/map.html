@@ -17,7 +17,7 @@
 
 <!-- map api -->
 <script defer src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script> <!-- 주소검색 api-->
-<script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=l7xx748863b058d646e885cab6721f842154"></script>
+<script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=l7xx0540ab9b13084d30b44950c8a1b7f405"></script>
 
 <script type="text/javascript">
     var userLatLng = "{% url 'content:getApi' %}";
@@ -44,6 +44,11 @@
 
     var usrlat = "37.49241689559544";
     var usrlon = "127.03171389453507";
+
+    // 추가부분
+    var max_lat=0.0, max_lon=0.0, min_lat=50.0, min_lon=150.0;
+    var centerLat, centerLon;
+    var x,y;
 
 
     var posOptions = {
@@ -130,6 +135,17 @@
                             drawRoute(route, "#0000ff");
                         });
                         drawRoute(userBusRoute, "#ff0000");
+                        
+                        // 추가부분
+                        //map.zoomToMaxExtent( );
+                        cal_center(route_info.bus.viaPoints);
+                        var bounds = new Tmapv2.LatLngBounds();
+                        bounds.extend(new Tmapv2.LatLng(centerLat + x , centerLon));
+                        bounds.extend(new Tmapv2.LatLng(centerLat - x , centerLon));
+                        bounds.extend(new Tmapv2.LatLng(centerLat , centerLon + y));
+                        bounds.extend(new Tmapv2.LatLng(centerLat , centerLon - y));
+                        map.fitBounds(bounds);
+                        map.zoomIn();
                     }
                     else { // 기사
                         driverPath = route_info.path;
@@ -137,7 +153,7 @@
                         sToE.push(route_info.viaPoints[0]);
                         sToE.push(route_info.viaPoints[route_info.viaPoints.length-1]);
                         setMarker(sToE);
-                        setViaPoint(route_info.viaPoints.slice(1, -1));
+                        setViaPoint(route_info.viaPoints);
 
                         drawRoute(driverPath, "#ff0000");
                     }
@@ -170,6 +186,20 @@
             map: map
         });
         resultdrawArr.push(polyline_);
+    }
+
+     // 최대 경도,위도 최소 경도,위도 구하기 (추가부분)
+     function cal_center(points) {
+        points.forEach((poi) => {
+            if(max_lat < poi.lat) {max_lat=poi.lat;}
+            if(max_lon < poi.lon) {max_lon=poi.lon;}
+            if(min_lat > poi.lat) {min_lat=poi.lat;}
+            if(min_lon > poi.lon) {min_lon=poi.lon;}
+        });
+        centerLat=(max_lat+min_lat)/2.0;
+        centerLon=(max_lon+min_lon)/2.0;
+        x=max_lat-min_lat;
+        y=max_lon-min_lon;
     }
 
     function setViaPoint(points) {
@@ -267,27 +297,6 @@
                             {% else %}
                                 <button id="btn_select" type="button" class="btn btn-dark" value="/driverRoute">기사 길찾기</button>
                             {% endif %}
-                        
-
-                           <!--  <button id="btn_select" type="button" class="btn btn-dark">길찾기</button>
-                            <select id="user_type">
-                                
-                                {% if userfirst.usertype == "passenger" %}
-                                    <option value="/userRoute" selected="selected">승객</option>
-                                {% else %}
-                                    <option value="/driverRoute" selected="selected">기사</option>
-                                {% endif %} -->
-                    
-                                <!--
-                                <%if(userfirst.usertype.equals("passenger")){%>
-                                    <option value="/userRoute" selected="selected">승객</option>
-                                <%}else{%>
-                                    <option value="/driverRoute" selected="selected">기사</option>
-                                <%}%>-->
-                                   <!-- <option value="/userRoute" selected="selected">승객</option>
-                                    <option value="/driverRoute">기사</option>
-                                    <option>{{userfirst.usertype}}</option>
-                            </select>-->
                         </div>
                     </div>
                 </div>
