@@ -102,12 +102,7 @@ input.onclick = function () {
                 extraRoadAddr = ' (' + extraRoadAddr + ')';
             }
             startcode = data.sigunguCode;
-            // 우편번호와 주소 정보를 해당 필드에 넣는다.
-            // document.getElementById('sample4_postcode').value = data.zonecode;
-            // document.getElementById("sample4_roadAddress").value = roadAddr;
-            // document.getElementById("sample4_jibunAddress").value = data.jibunAddress;
             document.getElementById("StartAddr").value = roadAddr;
-            //console.log(document.getElementById("StartAddr").value);
         }
     }).open();
 
