@@ -17,7 +17,7 @@
 
 <!-- map api -->
 <script defer src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script> <!-- 주소검색 api-->
-<script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=l7xx185de2b581bb4e6fb0eee0558473874a"></script>
+<script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=l7xx748863b058d646e885cab6721f842154"></script>
 
 <script type="text/javascript">
     var userLatLng = "{% url 'content:getApi' %}";
@@ -265,12 +265,19 @@
                             <button id="btn_select" type="button" class="btn btn-dark">길찾기</button>
                             <select id="user_type">
                                 <!-- 수정된 부분 - 석규 -->
-                               <%if(userfirst.usertype.equals("passenger")){%>
+                                
+                                {% if userfirst.usertype == "passenger" %}
                                     <option value="/userRoute" selected="selected">승객</option>
-                               </select>
+                                {% else %}
+                                    <option value="/driverRoute" selected="selected">기사</option>
+                                {% endif %}
+                                
+                                <!--
+                                <%if(userfirst.usertype.equals("passenger")){%>
+                                    <option value="/userRoute" selected="selected">승객</option>
                                 <%}else{%>
                                     <option value="/driverRoute" selected="selected">기사</option>
-                                <%}%>
+                                <%}%>-->
                                    <!-- <option value="/userRoute" selected="selected">승객</option>
                                     <option value="/driverRoute">기사</option>
                                     <option>{{userfirst.usertype}}</option> -->
