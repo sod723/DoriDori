@@ -96,7 +96,7 @@
         // 3. 경로탐색 API 사용요청
         document.querySelector("#btn_select").addEventListener('click', (event) => {
 
-            let user_type = document.querySelector("#user_type").value;
+            let user_type = document.querySelector("#btn_select").value;
 
             let route_info;
 
@@ -262,16 +262,22 @@
                 <div class="ft_area">
                     <div class="ft_select_wrap">
                         <div class="ft_select">
-                            <button id="btn_select" type="button" class="btn btn-dark">길찾기</button>
+                            {% if userfirst.usertype == "passenger" %}
+                                <button id="btn_select" type="button" class="btn btn-dark" value="/userRoute">승객 길찾기</button>
+                            {% else %}
+                                <button id="btn_select" type="button" class="btn btn-dark" value="/driverRoute">기사 길찾기</button>
+                            {% endif %}
+                        
+
+                           <!--  <button id="btn_select" type="button" class="btn btn-dark">길찾기</button>
                             <select id="user_type">
-                                <!-- 수정된 부분 - 석규 -->
                                 
                                 {% if userfirst.usertype == "passenger" %}
                                     <option value="/userRoute" selected="selected">승객</option>
                                 {% else %}
                                     <option value="/driverRoute" selected="selected">기사</option>
-                                {% endif %}
-                                
+                                {% endif %} -->
+                    
                                 <!--
                                 <%if(userfirst.usertype.equals("passenger")){%>
                                     <option value="/userRoute" selected="selected">승객</option>
