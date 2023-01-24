@@ -9,9 +9,10 @@ var safe_line;
 var start_x;
 var start_y;
 var resultArray = []; //출발지, 목적지 좌표
-var startArray = [];
-var endArray = [];
 
+var startcode;
+var endcode;
+let code = '';
 
 $(document).ready(function () {
     $('.route-wrap').hide()
@@ -81,10 +82,12 @@ input.onclick = function () {
     new daum.Postcode({
         oncomplete: function (data) {
             // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분입니다.
+
             // 도로명 주소의 노출 규칙에 따라 주소를 표시한다.
             // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
             var roadAddr = data.roadAddress; // 도로명 주소 변수
             var extraRoadAddr = ''; // 참고 항목 변수
+
             // 법정동명이 있을 경우 추가한다. (법정리는 제외)
             // 법정동의 경우 마지막 문자가 "동/로/가"로 끝난다.
             if (data.bname !== '' && /[동|로|가]$/g.test(data.bname)) {
@@ -98,19 +101,12 @@ input.onclick = function () {
             if (extraRoadAddr !== '') {
                 extraRoadAddr = ' (' + extraRoadAddr + ')';
             }
+            startcode = data.sigunguCode;
             document.getElementById("StartAddr").value = roadAddr;
-
-
-           marker_s = new Tmapv2.Marker(
-                {
-                    position: new Tmapv2.LatLng(37.566567545861645, 126.9850380932383),
-                    icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_s.png",
-                    iconSize: new Tmapv2.Size(24, 38),
-                    map: map
-                });
-            //console.log(document.getElementById("StartAddr").value);
         }
     }).open();
+
+
 };
 
 
@@ -130,17 +126,9 @@ output.onclick = function () {
             if (extraRoadAddr !== '') {
                 extraRoadAddr = ' (' + extraRoadAddr + ')';
             }
+             endcode= data.sigunguCode;
             //set value 도로명 주소
             document.getElementById("EndAddr").value = roadAddr;
-
-            //도착
-            marker_e = new Tmapv2.Marker(
-                {
-                    position: new Tmapv2.LatLng(37.403049076341794, 127.10331814639885),
-                    icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_e.png",
-                    iconSize: new Tmapv2.Size(24, 38),
-                    map: map
-                });
         }
     }).open();
 };
@@ -151,6 +139,10 @@ $("#find_botton").click(function () {
     shortestRoute = []    //초기화
     safeRoute = []
 
+    code=startcode+endcode;
+    console.log(code);
+
+
     //출발지 목적지 주소 -> 좌표변환
     new Promise((succ, fail) => {
         $.ajax({
@@ -160,12 +152,13 @@ $("#find_botton").click(function () {
             data: {
                 'StartAddr': $('#StartAddr').val(),
                 'EndAddr': $('#EndAddr').val(),
+                'code' : code,
                 'csrfmiddlewaretoken': csrftoken,
             },
 
             success: (result) => {
                 resultArray = result;
-                console.log(resultArray)
+                console.log(resultArray);
                 succ(result);  //성공하면 검색결과 처리
             },
             fail: (error) => {
@@ -175,14 +168,20 @@ $("#find_botton").click(function () {
         });
         //resultArray : startaddr, endaddr 좌표
     }).then((arg) => {
-        // console.log(resultArray);
+        // 로그인 안되어있을 시 로그인 창으로 이동
+        if(!resultArray['startaddr']){
+            window.location.href = resultArray;
+            return;
+        }
+
+        console.log(resultArray);
         console.log('좌표변환후 최단거리 실행');
 
         $.ajax({
             type: "POST",
             url: "https://apis.openapi.sk.com/tmap/routes?version=1&format=json&callback=result",
             data: {
-                "appKey": "l7xx846db5f3bc1e48d29b7275a745d501c8",
+                "appKey": "l7xxa21398bdba4947eba835e6c00ec9ffaf",
                 "startX": resultArray['startaddr'][1],
                 "startY": resultArray['startaddr'][0],
                 "endX": resultArray['endaddr'][1],
@@ -227,7 +226,63 @@ $("#find_botton").click(function () {
                 console.log(error);
             }
         });
+        //안전경로
+        $.ajax({
+            method: "POST",
+            url: saferoute,
+            raditional: true,
+            data: {
+                "startX": resultArray['startaddr'][1],
+                "startY": resultArray['startaddr'][0],
+                "endX": resultArray['endaddr'][1],
+                "endY": resultArray['endaddr'][0],
+                'csrfmiddlewaretoken': csrftoken,
+            },
+            success: (response) => {
+                safeRoute = response['result']
+                var safeDistance = "총 거리 : " + (response['totalDistance']).toFixed(1) + "km";
+                var safeTime = " 총 시간 : " + (response['totalTime']).toFixed(0) + "분";
 
+                $('#safe-route').text(safeDistance)
+                $('#safe-time').text(safeTime)
+
+                $('.route-wrap').show();
+                console.log(safeRoute)
+            },
+            fail: (error) => {
+                console.log(error);
+            }
+        }).then((arg) => {
+            // mapping safe
+
+            // markers.L.clearLayers();
+            // line.L.clearLayers();
+
+            if (start_markers != undefined) {
+                leaf_map.removeLayer(end_markers);
+                leaf_map.removeLayer(start_markers)
+            }
+            if (short_lineline != undefined) {
+                leaf_map.removeLayer(short_line);
+                leaf_map.removeLayer(safe_line);
+            }
+            leaf_map.setView([resultArray['startaddr'][0], resultArray['startaddr'][1]], 16)
+
+            start_markers = L.marker([resultArray['startaddr'][0], resultArray['startaddr'][1]]).addTo(leaf_map);
+            end_markers = L.marker([resultArray['endaddr'][0], resultArray['endaddr'][1]]).addTo(leaf_map);
+
+
+            //최단 route
+            short_line = L.polyline(shortestRoute, {
+                color: "red",
+                weight: 5
+            }).addTo(leaf_map);
+
+            //안전 route
+            safe_line = L.polyline(safeRoute, {
+                weight: 5
+            }).addTo(leaf_map);
+        });
     });
 
 
