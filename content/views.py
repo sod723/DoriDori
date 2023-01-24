@@ -22,7 +22,7 @@ end=0
 headers = {
     "accept": "application/json",
     "content-type": "application/json",
-    "appKey": "l7xxa747c344fb98476ca3f80e3893cce482"  # my app key
+    "appKey": "l7xx748863b058d646e885cab6721f842154"  # my app key
 }
 
 load = {
@@ -204,6 +204,8 @@ def slicing_list(start, end, coordi_list):
 
 
 def set_bus_data(start, end, dic):
+    print('드라이버데이터 비아포인트')
+    print(driver_data['viaPoints'])
     viaPoints = slicing_list(start, end, driver_data['viaPoints'])
     print('셋버스데이터')
     print(viaPoints)
@@ -270,6 +272,7 @@ def userRoute(request):
     print('루트')
     print(route[1])
     print(route[2])
+    print(user_data['bus'])
     set_bus_data(route[1], route[2], user_data['bus'])
     # { 도보 정보 :
     #   { 입력 지점(위도&경도) : [출발지, 탑승지, 하차지, 목적지]
@@ -323,7 +326,7 @@ def getDriverRoute(userid):
 
     viapoints = [
         {"viaPointId": str(bus.id), "viaPointName": bus.bus_name, "viaY": str(bus.latitude),
-         "viaX": str(bus.longitude)} for bus in Bus_Stop.objects.filter(bus_group=0).all()]
+         "viaX": str(bus.longitude)} for bus in Bus_Stop.objects.filter(bus_group=user.bus_group).all()]
 
     end = {"lat": str(first_end[1].latitude), "lon": str(first_end[1].longitude), "name": first_end[1].bus_name}
 
@@ -365,7 +368,7 @@ def GetSpotPoint(request):
                             ).save()
 
         print(ClusterExist(userid))
-        if ClusterExist(userid)==1:
+        if ClusterExist(userid)==2:
             first_start_clustering(userid)
             first_end_clustering(userid)
         else:
@@ -375,8 +378,6 @@ def GetSpotPoint(request):
         context = {'startaddr': start_coordinate, 'endaddr': end_coordinate}
         return HttpResponse(json.dumps(context), content_type='application/json')
     else:
-
-
         return HttpResponse('/user/login')
 
 
@@ -384,11 +385,11 @@ def ClusterExist(userid):
     if Content.objects.filter(user_id=userid,s_busid='').exists():
         content=Content.objects.get(user_id=userid)
         if Content.objects.filter(sigungucode=content.sigungucode,service=0,bus_group='').count()>1:
-            return 1 ##클러스터가 아예처음
-        else:##클러스터가 존재하지만 새로운 id가 들어가는경우
-            return 2
-    else:
-        return 0
+            return 2 ##클러스터가 아예처음
+        elif Content.objects.filter(sigungucode=content.sigungucode,service=0,).count()>3:
+            return 1
+        else:
+            return 0
         ##이미있는 id가 누를경우
 
 
@@ -511,8 +512,12 @@ def first_start_clustering(user_id):
     cols = 2
     index=0
     arr = [[0 for j in range(cols)] for i in range(rows)]
-    bus_group=Bus_Stop.objects.filter(start_or_end=0).count()/4
+    if Content.objects.filter(sigungucode=user_content.sigungucode,bus_group='').exists():
+        bus_group=Bus_Stop.objects.filter(start_or_end=0).count()/4
+    else:
+        bus_group=Content.objects.filter(sigungucode=user_content.sigungucode).first().bus_group
     bus_group=int(bus_group)
+
     for people in Content.objects.filter(sigungucode=user_content.sigungucode,service=0).all():
 
         arr[index][0]=people.s_longitude
@@ -553,9 +558,11 @@ def first_end_clustering(user_id):
     cols = 2
     index=0
     arr = [[0 for j in range(cols)] for i in range(rows)]
-    bus_group=Bus_Stop.objects.filter(start_or_end=1).count()/4
-    print('버스그룹')
-    bus_group = int(bus_group)
+    if Content.objects.filter(sigungucode=user_content.sigungucode,bus_group='').exists():
+        bus_group=Bus_Stop.objects.filter(start_or_end=1).count()/4
+    else:
+        bus_group=Content.objects.filter(sigungucode=user_content.sigungucode).first().bus_group
+    bus_group=int(bus_group)
     print(bus_group)
     for people in Content.objects.filter(sigungucode=user_content.sigungucode,service=0).all():
 
