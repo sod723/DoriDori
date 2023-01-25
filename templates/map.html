@@ -137,7 +137,6 @@
                         drawRoute(userBusRoute, "#ff0000");
                         
                         // 추가부분
-                        //map.zoomToMaxExtent( );
                         cal_center(route_info.bus.viaPoints);
                         var bounds = new Tmapv2.LatLngBounds();
                         bounds.extend(new Tmapv2.LatLng(centerLat + x , centerLon));
@@ -145,7 +144,7 @@
                         bounds.extend(new Tmapv2.LatLng(centerLat , centerLon + y));
                         bounds.extend(new Tmapv2.LatLng(centerLat , centerLon - y));
                         map.fitBounds(bounds);
-                        map.zoomIn();
+                        // map.zoomIn();
                     }
                     else { // 기사
                         driverPath = route_info.path;
@@ -198,8 +197,8 @@
         });
         centerLat=(max_lat+min_lat)/2.0;
         centerLon=(max_lon+min_lon)/2.0;
-        x=max_lat-min_lat;
-        y=max_lon-min_lon;
+        x=(max_lat-min_lat)/2.0;
+        y=(max_lon-min_lon)/2.0;
     }
 
     function setViaPoint(points) {
