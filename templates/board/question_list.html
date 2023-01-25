@@ -4,7 +4,7 @@
 <div class="container my-3">
     <div class="row my-3">
         <div class="col-6">
-            <a href="{% url 'board:question_create' %}" class="btn btn-primary">질문 등록하기</a>
+            <a href="{% url 'board:question_create' %}" class="btn btn-primary">경매 등록하기</a>
         </div>
         <div class="col-6">
             <div class="input-group">
@@ -18,33 +18,25 @@
     <table class="table">
         <thead>
         <tr class="text-center table-dark">
-            <th>번호</th>
-            <th style="width:50%">제목</th>
-            <th>글쓴이</th>
-            <th>작성일시</th>
+            <th></th>
+            <th style="width:50%">경로</th>
+            <th>마감 일자</th>
+            <th>경매 시작가</th>
         </tr>
         </thead>
         <tbody>
         {% if question_list %}
         {% for question in question_list %}
         <tr class="text-center">
-            <td>
-                <!-- 번호 = 전체건수 - 시작인덱스 - 현재인덱스 + 1 -->
-                {{ question_list.paginator.count|sub:question_list.start_index|sub:forloop.counter0|add:1 }}
-            </td>
-            <td class="text-start">
-                <a href="{% url 'board:detail' question.id %}">{{ question.subject }}</a>
-                {% if question.answer_set.count > 0 %}
-                <span class="text-danger small mx-2">{{ question.answer_set.count }}</span>
-                {% endif %}
-            </td>
-            <td>{{ question.author.username }}</td>
-            <td>{{ question.create_date }}</td>
+            <td><a href="{% url 'board:detail' question.id %}">입찰하기</a> </td>
+            <td>{{ question.route }}</td>
+            <td>{{ question.time}}</td>
+            <td>{{ question.content}}</td>
         </tr>
         {% endfor %}
         {% else %}
         <tr>
-            <td colspan="3">질문이 없습니다.</td>
+            <td colspan="3"></td>
         </tr>
         {% endif %}
         </tbody>

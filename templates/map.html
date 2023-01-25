@@ -17,7 +17,7 @@
 
 <!-- map api -->
 <script defer src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script> <!-- 주소검색 api-->
-<script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=l7xxa21398bdba4947eba835e6c00ec9ffaf"></script>
+<script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=l7xx0540ab9b13084d30b44950c8a1b7f405"></script>
 
 <script type="text/javascript">
     var userLatLng = "{% url 'content:getApi' %}";
@@ -78,71 +78,7 @@
         navigator.geolocation.getCurrentPosition(success, error, posOptions);
     }
     //  alert("내용부분 : " + this.lat + " / " + this.lon);
-    var _oldFetch = fetch;
-    var visible = true;
-    // Create our new version of the fetch function
-    window.fetch = function () {
 
-        // Create hooks
-        var fetchStart = new Event('fetchStart', { 'view': document, 'bubbles': true, 'cancelable': false });
-        var fetchEnd = new Event('fetchEnd', { 'view': document, 'bubbles': true, 'cancelable': false });
-
-        // Pass the supplied arguments to the real fetch function
-        var fetchCall = _oldFetch.apply(this, arguments);
-
-        // Trigger the fetchStart event
-        document.dispatchEvent(fetchStart);
-
-        fetchCall.then(function () {
-            // Trigger the fetchEnd event
-            document.dispatchEvent(fetchEnd);
-        }).catch(function () {
-            // Trigger the fetchEnd event
-            document.dispatchEvent(fetchEnd);
-        });
-
-        return fetchCall;
-    };
-
-    document.addEventListener('fetchStart', function () {
-        const loader = document.querySelector('.preload');
-        const emoji = loader.querySelector('.emoji');
-        loader.style.display = "block";
-
-        const emojis = ["🕐", "🕜", "🕑", "🕝", "🕒", "🕞", "🕓", "🕟", "🕔", "🕠", "🕕", "🕡", "🕖", "🕢", "🕗", "🕣", "🕘", "🕤", "🕙", "🕥", "🕚", "🕦", "🕛", "🕧"];
-
-        const interval = 125;
-
-        const loadEmojis = (arr) => {
-            let inter = setInterval(() => {
-                if (visible) {
-                    emoji.innerText = arr[Math.floor(Math.random() * arr.length)];
-                }
-                else {
-                    clearInterval(inter);
-                }
-                //console.log(Math.floor(Math.random() * arr.length))
-            }, interval);
-        }
-
-        const init = () => {
-            loadEmojis(emojis);
-        }
-        init();
-        
-        let btns = document.querySelectorAll(".btn");
-        console.log(btns);
-        btns.forEach((btn) => {
-            btn.disabled = true;
-        });
-    });
-
-    document.addEventListener('fetchEnd', function () {
-        document.querySelector('.preload').style.display = "none";
-        visible = false;
-        alert("경로가 검색되었습니다.");
-    });
-    
     function initTmap() {
 
         // 1. 지도 띄우기
@@ -196,9 +132,9 @@
                         setViaPoint(route_info.bus.viaPoints);
 
                         userPassengerPath.forEach((route) => {
-                            drawRoute(route, "#0000ff");
+                            drawRoute(route, "#ff0000");
                         });
-                        drawRoute(userBusRoute, "#ff0000");
+                        drawRoute(userBusRoute, "#229c9e");
                         let userBusTime = route_info.bus.time.reduce((a, b) => a + b, 0);
                         let userBusDistance = route_info.bus.distance.reduce((a, b) => a + b, 0);
 
@@ -213,7 +149,7 @@
                         arr = route_info.viaPoints;
                         setMarker(route_info.viaPoints);
 
-                        drawRoute(driverPath, "#ff0000");
+                        drawRoute(driverPath, "#229c9e");
                         showPoint(route_info.viaPoints, route_info.time, route_info.distance);
                         cal_center(route_info.viaPoints);
                     }
@@ -240,7 +176,7 @@
         centerLat = (max_lat + min_lat) / 2.0;
         centerLon = (max_lon + min_lon) / 2.0;
         x = (max_lat - min_lat) / 2.0;
-        y = (max_lon - min_lon) / 2.0;
+        y = (max_lon - min_lon) / 1.0;
     }
 
     function showPoint(pointArray, timeArray, distanceArray) {
@@ -339,7 +275,7 @@
         polyline_ = new Tmapv2.Polyline({
             path: arrPoint,
             strokeColor: color,
-            strokeWeight: 3,
+            strokeWeight: 4,
             map: map
         });
         resultdrawArr.push(polyline_);
@@ -353,8 +289,8 @@
                     position: new Tmapv2.LatLng(
                         poi.lat,
                         poi.lon),
-                    icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_p.png",
-                    iconSize: new Tmapv2.Size(24, 38),
+                    icon: "https://postfiles.pstatic.net/MjAyMzAxMjVfMTAw/MDAxNjc0NjIwODkyNzIy.SbGS928H7yvR9ZRNvP_rqBJ2jiq_5IxnbvuKko7ckwkg.iddwW-EceWi528-cd2NgGlcTkqW_jqzNrUVNPFNKWKUg.PNG.keyhyun0123/image2vector.png?type=w580",
+                    iconSize: new Tmapv2.Size(35, 35),
                     title: poi.name,
                     map: map
                 });
@@ -372,8 +308,8 @@
                     position: new Tmapv2.LatLng(
                         start_end[i].lat,
                         start_end[i].lon),
-                    icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_b_m_" + mark_img_tag[i] + ".png",
-                    iconSize: new Tmapv2.Size(24, 38),
+                    icon: "https://postfiles.pstatic.net/MjAyMzAxMjVfNTcg/MDAxNjc0NjIzOTY3MTIz.bRdv0u15hKD0owBPoLETrLPlY8pfYC2t7pYNxMD0w5Mg.xSn1p05CUqANRlrzZBFc4QQiKrnMmxioIM0YdOt9_A8g.PNG.keyhyun0123/SE-72ea39b2-4a0d-4f7e-bae2-bb5a18a7c002.png?type=w580",
+                    iconSize: new Tmapv2.Size(40, 50),
                     title: start_end[i].name,
                     map: map
                 });
