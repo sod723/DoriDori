@@ -1,7 +1,12 @@
 import math
+
 import geocoder
+from folium import plugins
+import folium
+from haversine import haversine  # 거리측정
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
+
 from content.models import Content
 from json import dumps
 from json import loads
@@ -12,6 +17,7 @@ from content.models import Content
 from content.models import Bus_Stop
 from content.models import User_Stop
 from sklearn.cluster import KMeans
+# from . import RouteSearch
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
@@ -22,7 +28,7 @@ end=0
 headers = {
     "accept": "application/json",
     "content-type": "application/json",
-    "appKey": "l7xx748863b058d646e885cab6721f842154"  # my app key
+    "appKey": "l7xxef5d2ce4263a4a628e54c27e8beb5188"  # my app key
 }
 
 load = {
@@ -43,38 +49,43 @@ driver_data = {
     'distance': []
 }
 
-# g = geocoder.ip('me')
+g = geocoder.ip('me')
 
 
 def map(request):
-    userid=request.user.id
-    usertype=request.user.first_name
-    '''Content.objects.filter(id__gte=13).delete()
-    Bus_Stop.objects.filter(id__gte=9).delete()
-    User_Stop.objects.filter(id__gte=14).delete()
-    User_Stop.objects.filter(id__gte=14).delete()'''
-    print(usertype)
-    if Content.objects.filter(user_id=userid).exists():
-        if Content.objects.filter(user_id=userid,bus_group='').exists():
-            print('')
-        else:
-            getDriverRoute(userid)
+    try:
+        userid=request.user.id
+        user=Content.objects.get(id=userid)
+    except Content.DoesNotExist:
+        userid = None
+    # getDriverRoute(userid)
+
+    # user info return
+    map = folium.Map(location=g.latlng, zoom_start=15, width='100%', height='100%', )
+    plugins.LocateControl().add_to(map)
+    plugins.Geocoder().add_to(map)
+
+    maps = map._repr_html_()  # 지도를 템플릿에 삽입하기위해 iframe이 있는 문자열로 반환 (folium)
 
     return render(request, "map.html", {
+        'map': maps,
         'content': Content,
     })
 
 def SetStartEnd(bus_group):
+    print(bus_group)
+    print(set)
     c=0
-    bus_set=Bus_Stop.objects.filter(bus_group=bus_group).all()
-    bus_set.update(first='0')
     for bus1 in Bus_Stop.objects.filter(bus_group=bus_group,start_or_end=0):
         for bus2 in Bus_Stop.objects.filter(bus_group=bus_group,start_or_end=1):
+            print(bus2)
             temp = math.sqrt(math.pow(bus1.latitude-bus2.latitude, 2) + math.pow(bus1.longitude-bus2.longitude, 2))
+            print(temp)
             if temp>c:
                 c=temp
                 start=bus1
                 end=bus2
+                print(end)
 
     start.first=1
     start.save()
@@ -82,12 +93,21 @@ def SetStartEnd(bus_group):
     end.save()
     return start,end
 
-
-
+def ClusterExist(userid):
+    if Content.objects.filter(user_id=userid,s_busid='').exists():
+        content=Content.objects.get(user_id=userid)
+        if Content.objects.filter(sigungucode=content.sigungucode,service=0,bus_group='').count()>1:
+            return 2 ##클러스터가 아예처음
+        elif Content.objects.filter(sigungucode=content.sigungucode,service=0,).count()>3:
+            return 1
+        else:
+            return 0
+    
 def getUsrLatLng(request):
     content = Content.objects.all()
     content_list = serializers.serialize('json', content)
     return HttpResponse(content_list, content_type="text/json=comment-filtered")
+
 
 # 위도 경도 => 근처 버스정류장 정보 return
 # parameter : 클러스터링한 위도 경도(문자열)
@@ -115,6 +135,7 @@ def get_busroute_payload(start, viapoints, end):
         "startX": start['lon'],
         "startY": start['lat'],
         "startTime": "201709121938",
+        "searchOption": "2",
         "endName": end['name'],
         "endX": end['lon'],
         "endY": end['lat'],
@@ -138,27 +159,33 @@ def getRouteJSON(start, end):
 def getPath(resultData):
     resultList = []
     viaPoints = []
+    times = []
+    distance = []
+
     for elem in resultData:
         geometry = elem["geometry"]
         properties = elem["properties"]
 
-        if (geometry["type"] == "LineString"):
-            for coord in geometry["coordinates"]:
-                resultList.append(coord)
-        # 경유지
-        elif "viaPointId" in properties:
-            viaPoints.append({'lat': geometry["coordinates"][1], 'lon': geometry["coordinates"][0],
-                              'name': properties["viaPointName"][4:]})
-
+            
+        if(geometry["type"] == "LineString"):
+            resultList.append(geometry["coordinates"])
+            times.append(int(properties['distance']) // 16)
+            distance.append(int(properties['distance']))
+        # 경유지        
+        elif (geometry["type"] == "Point") and ("viaPointId" in properties):
+            viaPoints.append({'lat' : geometry["coordinates"][1], 'lon':geometry["coordinates"][0], 'name': properties["viaPointName"][4:]})
+    
     # 경유지 경로를 구하는 경우 경로, 경유지(위도, 경도)반환
     if viaPoints:
         return {
-            'path': resultList,
-            'viapoints': viaPoints
+            'path' : resultList,
+            'viapoints' : viaPoints,
+            'times': times,
+            'distance': distance
         }
     else:
         return resultList
-
+  
 
 # 경로 구하기
 
@@ -186,58 +213,47 @@ def set_walking_data(points, dic):
     for i in range(0, 3, 2):
         response = get_pedestrian_routedata(points[i], points[i + 1])
         dic['path'].append(getPath(response))
-        dic['time'].append(response[0]['properties']['totalTime'])
-        dic['distance'].append(response[0]['properties']['totalDistance'])
+        dic['time'].append(int(response[0]['properties']['totalTime']))
+        dic['distance'].append(int(response[0]['properties']['totalDistance']))
 
 
-def slicing_list(start, end, coordi_list):
-    print('쿠디리스트')
+def slicing_list(start, end, data):
+    path_list = data['path']
+    coordi_list = data['viaPoints']
+    time_list = data['time']
+    distacne_list = data['distance']
+
+    print('via')
     print(coordi_list)
-    for a in coordi_list:
-        a['lat']=str(a['lat'])
-        a['lon'] = str(a['lon'])
+    print(time_list)
+    print(distacne_list)
+
     start_idx = coordi_list.index(start)
     end_idx = coordi_list.index(end)
-    print(start_idx)
-    print(end_idx)
-    return coordi_list[start_idx + 1:end_idx]
 
+    return {
+        'path': path_list[start_idx:end_idx],
+        'viapoints': coordi_list[start_idx + 1:end_idx],
+        'times': time_list[start_idx:end_idx],
+        'distance': distacne_list[start_idx:end_idx]
+    }
 
 def set_bus_data(start, end, dic):
-    print('드라이버데이터 비아포인트')
-    print(driver_data['viaPoints'])
-    viaPoints = slicing_list(start, end, driver_data['viaPoints'])
-    print('셋버스데이터')
-    print(viaPoints)
-    user_viaPoints = []
+    user_bus_info = slicing_list(start, end, driver_data)
 
-    start_point = {"lat": str(start['lat']), "lon": str(start['lon']), "name": start['name']}
-    for i in range(0, len(viaPoints)):
-        user_viaPoints.append(
-            {"viaPointId": f"via{i}", "viaPointName": viaPoints[i]['name'], "viaY": str(viaPoints[i]['lat']),
-             "viaX": str(viaPoints[i]['lon'])})
-    end_point = {"lat": str(end['lat']), "lon": str(end['lon']), "name": end['name']}
-
-    print('유저 비아포인트')
-    print(user_viaPoints)
-    load = get_busroute_payload(start_point, user_viaPoints, end_point)
-    print('load')
-    print(load)
-    response = get_driver_route_data(load)
-    print('셋버스데이터리스폰스')
-    print(response)
-    route_data = getPath(response['features'])
-    properties = response['properties']
-
-    dic['path'] = route_data['path']
-    dic['viaPoints'] = route_data['viapoints']
-    dic['time'] = int(properties['totalTime'])
-    dic['distance'] = int(properties['totalDistance'])
+    dic['path'] = user_bus_info['path']
+    dic['viaPoints'] = user_bus_info['viapoints']
+    print('s via')
+    print(user_bus_info['viapoints'])
+    print(user_bus_info['times'])
+    print(user_bus_info['distance'])
+    dic['time'] = user_bus_info['times']
+    dic['distance'] = user_bus_info['distance']
 
 
 # 사용자의 경로를 반환
 @csrf_exempt
-def userRoute(request):
+def userRoute(userid):
     user_data = {
         'walking': {
             'points': [],
@@ -252,27 +268,25 @@ def userRoute(request):
             'distance': []
         }
     }
-    user=Content.objects.get(user_id=request.user.id)
-    startbus=Bus_Stop.objects.get(id=user.s_busid)
-    endbus = Bus_Stop.objects.get(id=user.e_busid)
-    s=Bus_Stop.objects.get(bus_group=user.bus_group,start_or_end=0,first=1)
-    e= Bus_Stop.objects.get(bus_group=user.bus_group, start_or_end=1, first=1)
+    try:
+        user=Content.objects.get(id=userid)
+        startbus=Bus_Stop.objects.get(id=user.s_busid)
+        endbus = Bus_Stop.objects.get(id=user.e_busid)
+        print(SetStartEnd(user.bus_group))
+    except Content.DoesNotExist:
+        return HttpResponse('/user/login')
     # 출발지
     # 탑승지(클러스터링)
     # 하차지(클러스터링)
     # 목적지
-    route = [{"lat": str(user.s_latitude), "lon": str(user.s_longitude), "name": '유저의 집'},
-             {"lat": str(startbus.latitude), "lon": str(startbus.longitude), "name": startbus.bus_name},
-             {"lat": str(endbus.latitude), "lon": str(endbus.longitude), "name": endbus.bus_name},
-             {"lat": str(user.e_latitude), "lon": str(user.e_longitude), "name": '유저의 회사'}]
-
+    route = [{"lat": user.s_latitude, "lon": user.s_longitude, "name": "출발지"},
+             {"lat": startbus.latitude, "lon": startbus.longitude, "name": startbus.bus_name},
+             {"lat": endbus.latitude, "lon": endbus.longitude, "name": endbus.bus_name},
+             {"lat": user.e_latitude, "lon": user.e_longitude, "name": "목적지"}]
 
 
     set_walking_data(route, user_data['walking'])
-    print('루트')
-    print(route[1])
-    print(route[2])
-    print(user_data['bus'])
+
     set_bus_data(route[1], route[2], user_data['bus'])
     # { 도보 정보 :
     #   { 입력 지점(위도&경도) : [출발지, 탑승지, 하차지, 목적지]
@@ -301,34 +315,41 @@ def set_driver_data(start, viapoints, end, dic):
 
     load = get_busroute_payload(start, viapoints, end)
     response = get_driver_route_data(load)
-    print(response)
+    # print(response)
     route_data = getPath(response['features'])
-    properties = response['properties']
-
+    
     dic['path'] = route_data['path']
     dic['viaPoints'] = route_data['viapoints']
-    dic['time'] = int(properties['totalTime'])
-    dic['distance'] = int(properties['totalDistance'])
-
+    dic['time'] = route_data['times']
+    dic['distance'] = route_data['distance']
 
 # 운전자의 경로를 반환
 @csrf_exempt
-def driverRoute(request):
+def driverRoute():
     return HttpResponse(dumps(driver_data))
 
-
 def getDriverRoute(userid):
-    user=Content.objects.get(user_id=userid)
+    if not userid:
+        return HttpResponse("Please login")
 
+    user=Content.objects.get(id=userid)
+    print('getdriver')
     first_end=SetStartEnd(user.bus_group)
+    print('퍼스트엔드')
+    print(first_end)
     # 클러스터링 데이터
     start = {"lat": str(first_end[0].latitude), "lon": str(first_end[0].longitude), "name": first_end[0].bus_name}
-
-    viapoints = [
-        {"viaPointId": str(bus.id), "viaPointName": bus.bus_name, "viaY": str(bus.latitude),
-         "viaX": str(bus.longitude)} for bus in Bus_Stop.objects.filter(bus_group=user.bus_group).all()]
-
+    print(start)
+    viapoints = []
     end = {"lat": str(first_end[1].latitude), "lon": str(first_end[1].longitude), "name": first_end[1].bus_name}
+    print(end)
+
+    
+    for bus in Bus_Stop.objects.filter(bus_group=user.bus_group).all():
+        if start["name"] != bus.bus_name and end["name"] != bus.bus_name:
+            viapoints.append({"viaPointId": str(bus.id), "viaPointName": bus.bus_name, "viaY": str(bus.latitude),
+            "viaX": str(bus.longitude)})
+    print(viapoints)
 
     set_driver_data(start, viapoints, end, driver_data)
     # {
@@ -338,7 +359,160 @@ def getDriverRoute(userid):
     #   거리 : 거리
     # }
     return driver_data
+
+@csrf_exempt
+def getRoute(request):
+    try:
+        user_type = request.user.first_name
+        userid=request.user.id
+    except Content.DoesNotExist:
+        user_type = "none"
+        return HttpResponse(user_type)
+    
+    getDriverRoute(userid)
+    if user_type == "passenger":
+        return userRoute(userid)
+    else:
+        return driverRoute()
+    
 ###########################################################
+def saferoute(request):
+    SafePath = []
+    totalDistance = 0
+
+    startx = request.POST.get('startX')
+    starty = request.POST.get('startY')
+    endx = request.POST.get('endX')
+    endy = request.POST.get('endY')
+    start_coordinate = [starty, startx]
+    end_coordinate = [endy, endx]
+
+    # type : list(Hmap), grid(Hex), list
+    Hexlist, grid, path, TileValue_map = RouteSearch.startSetting(start_coordinate, end_coordinate)
+    Before_Hex = path[0]
+    increase = [0, 0]  # q,r 증가율
+    count = 1
+
+    for idx, HexPoint in enumerate(path):
+        if Before_Hex is not HexPoint:
+            # 첫 노드 증가율 기록 - 두번째 노드
+            if increase[0] == 0 and increase[1] == 0:
+                x = int(HexPoint[0]) - int(Before_Hex[0])
+                y = int(HexPoint[1]) - int(Before_Hex[1])
+                increase = [x, y]
+                Before_Hex = HexPoint
+
+                continue
+            # 증가율 비교
+            else:
+                x = int(HexPoint[0]) - int(Before_Hex[0])
+                y = int(HexPoint[1]) - int(Before_Hex[1])
+                if increase[0] == x and increase[1] == y:
+                    Before_Hex = HexPoint
+                    continue
+                else:
+                    increase = [x, y]
+
+        # print(count,' ',HexPoint)
+        count += 1
+        Before_Hex = HexPoint
+        geo_center = grid.hex_center(HexPoint)
+        SafePath.append([geo_center.y, geo_center.x])
+
+        if len(SafePath) > 1:
+            totalDistance += haversine(SafePath[len(SafePath) - 2], SafePath[len(SafePath) - 1])
+        increase = [0, 0]
+
+    # 마지막 노드 추가
+    geo_center = grid.hex_center(path[-1])
+    SafePath.append([geo_center.y, geo_center.x])
+    totalDistance += haversine(SafePath[len(SafePath) - 2], SafePath[len(SafePath) - 1])
+
+    print('토탈 거리:', totalDistance)
+    soc = 1 / 16
+    totalTime = totalDistance // soc
+    print('토탈 시간', totalTime)
+    return HttpResponse(json.dumps({'result': SafePath, 'totalDistance': totalDistance, 'totalTime': totalTime}),
+                        content_type="application/json");
+
+
+def PathFinder(request):
+    shortData = []
+    SafePath = []
+    SPoint = []
+
+    # ------------------------- 최단 루트 (SPoint) -----------------------------------------
+    start_coordinate = getLatLng(request.POST.get('StartAddr'))
+    end_coordinate = getLatLng(request.POST.get('EndAddr'))
+
+    shortData = request.POST.get('shortestRoute').split(",")
+
+    for i in shortData:
+        if (shortData.index(i) % 2 == 0):
+            lat = i;  # 위도
+            lon = shortData[(shortData.index(i)) + 1]  # 경도
+            point = [float(lat), float(lon)]
+            SPoint.append(point)
+
+    # -----------------------------맵핑-----------------------------------------
+    map = folium.Map(location=start_coordinate, zoom_start=15, width='100%', height='100%', )
+
+    folium.PolyLine(locations=SPoint, weight=4, color='red').add_to(map)
+
+    folium.Marker(
+        location=start_coordinate,
+        popup=request.POST.get('StartAddr'),
+        icon=folium.Icon(color="red"),
+    ).add_to(map)
+
+    folium.Marker(
+        location=end_coordinate,
+        popup=request.POST.get('EndAddr'),
+        icon=folium.Icon(color="red"),
+    ).add_to(map)
+
+    plugins.LocateControl().add_to(map)
+
+    # ---------------------------안전 루트--------------------------------------
+    # type : list(Hmap), grid(Hex), list
+    Hexlist, grid, path = RouteSearch.startSetting(start_coordinate, end_coordinate)
+    Before_Hex = path[0]
+    increase = [0, 0]  # q,r 증가율
+    count = 1
+
+    for idx, HexPoint in enumerate(path):
+        if Before_Hex is not HexPoint:
+            # 첫 노드 증가율 기록 - 두번째 노드
+            if increase[0] == 0 and increase[1] == 0:
+                x = int(HexPoint[0]) - int(Before_Hex[0])
+                y = int(HexPoint[1]) - int(Before_Hex[1])
+                increase = [x, y]
+                Before_Hex = HexPoint
+
+                continue
+            # 증가율 비교
+            else:
+                x = int(HexPoint[0]) - int(Before_Hex[0])
+                y = int(HexPoint[1]) - int(Before_Hex[1])
+                if increase[0] == x and increase[1] == y:
+                    Before_Hex = HexPoint
+                    continue
+                else:
+                    increase = [x, y]
+
+        print(count, ' ', HexPoint)
+        count += 1
+        Before_Hex = HexPoint
+        geo_center = grid.hex_center(HexPoint)
+        SafePath.append([geo_center.y, geo_center.x])
+
+        increase = [0, 0]
+    folium.PolyLine(locations=SafePath, weight=4, color='blue').add_to(map)
+
+    maps = map._repr_html_()  # 지도를 템플릿에 삽입하기위해 iframe이 있는 문자열로 반환 (folium)
+
+    return render(request, '../templates/home.html', {'map': maps})
+
 
 def GetSpotPoint(request):
     start_coordinate = getLatLng(request.POST.get('StartAddr'))
@@ -379,18 +553,6 @@ def GetSpotPoint(request):
         return HttpResponse(json.dumps(context), content_type='application/json')
     else:
         return HttpResponse('/user/login')
-
-
-def ClusterExist(userid):
-    if Content.objects.filter(user_id=userid,s_busid='').exists():
-        content=Content.objects.get(user_id=userid)
-        if Content.objects.filter(sigungucode=content.sigungucode,service=0,bus_group='').count()>1:
-            return 2 ##클러스터가 아예처음
-        elif Content.objects.filter(sigungucode=content.sigungucode,service=0,).count()>3:
-            return 1
-        else:
-            return 0
-        ##이미있는 id가 누를경우
 
 
 def getLatLng(addr):
@@ -592,4 +754,3 @@ def first_end_clustering(user_id):
         user_stop.save()
         index+=1
     return end_km
-

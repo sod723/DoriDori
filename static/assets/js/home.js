@@ -102,7 +102,12 @@ input.onclick = function () {
                 extraRoadAddr = ' (' + extraRoadAddr + ')';
             }
             startcode = data.sigunguCode;
+            // 우편번호와 주소 정보를 해당 필드에 넣는다.
+            // document.getElementById('sample4_postcode').value = data.zonecode;
+            // document.getElementById("sample4_roadAddress").value = roadAddr;
+            // document.getElementById("sample4_jibunAddress").value = data.jibunAddress;
             document.getElementById("StartAddr").value = roadAddr;
+            //console.log(document.getElementById("StartAddr").value);
         }
     }).open();
 
@@ -181,7 +186,7 @@ $("#find_botton").click(function () {
             type: "POST",
             url: "https://apis.openapi.sk.com/tmap/routes?version=1&format=json&callback=result",
             data: {
-                "appKey": "l7xx748863b058d646e885cab6721f842154",
+                "appKey": "l7xxa21398bdba4947eba835e6c00ec9ffaf",
                 "startX": resultArray['startaddr'][1],
                 "startY": resultArray['startaddr'][0],
                 "endX": resultArray['endaddr'][1],

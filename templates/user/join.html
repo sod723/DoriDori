@@ -1,0 +1,131 @@
+<title>회원 가입</title>
+{% extends "base.html" %}
+{% load static %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'js/home.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+
+  <body style="background: #FAFAFA">
+  <div style="display: flex; flex-direction: column; align-items: center; width: 100%">
+    <div style="padding: 20px ;text-align: center;border: solid 1px rgba(219, 219, 219, 1); width: 300px; height: 500px; margin-top: 30px; background: white">
+      <div style="padding-bottom: 10px"><img style="width: 130px" src="{% static 'assets/img/dori.png' %}">
+      </div>
+      <div style="font-weight: bold; color: gray;padding-bottom: 20px"> 나만의 노선을 만드려면 가입하세요.</div>
+      <div>
+        <div class="form-floating mb-3">
+          <input type="email" class="form-control" style="font-size: 14px; height: 24px" id="input_email"
+                 placeholder="name@example.com">
+          <label for="input_email" style="font-size: 14px;padding: 4px 10px">이메일 주소</label>
+        </div>
+      </div>
+      <div>
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control" style="font-size: 14px; height: 24px" id="input_name"
+                 placeholder="name@example.com">
+          <label for="input_name" style="font-size: 14px;padding: 4px 10px">이름</label>
+        </div>
+      </div>
+      <div>
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control" style="font-size: 14px; height: 24px" id="input_nickname"
+                 placeholder="name@example.com">
+          <label for="input_nickname" style="font-size: 14px;padding: 4px 10px">닉네임</label>
+        </div>
+      </div>
+      <div>
+        <div class="form-floating mb-3">
+          <input type="password" class="form-control" style="font-size: 14px; height: 24px" id="input_password"
+                 placeholder="name@example.com">
+          <label for="input_password" style="font-size: 14px;padding: 4px 10px">비밀번호</label>
+        </div>
+      </div>
+      <div>
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control" style="font-size: 14px; height: 24px" id="input_phonenum"
+                 placeholder="name@example.com">
+          <label for="input_phonenum" style="font-size: 14px;padding: 4px 10px">전화번호</label>
+        </div>
+      </div>
+
+      <div>
+        <div class="form-check mb-3" style="padding: 10px">
+
+          {#          <label for="input_is_passenger" style="font-size: 14px;padding: 4px 10px">가입유형</label>#}
+          <input type='radio' name='type' value=true id="input_ispassenger"/>승객
+          <input type='radio' name='type' value=false id="input_ispassenger"/>기사
+        </div>
+      </div>
+
+      <button id="join_button" class="btn btn-primary" style="width: 100%"> 가입</button>
+    </div>
+    <div style="padding: 20px ;text-align: center;border: solid 1px rgba(219, 219, 219, 1); width: 300px; height: 70px; margin-top: 30px; background: white">
+      <div> 계정이 있으신가요? <a href="login">로그인</a></div>
+    </div>
+    <div style="padding: 20px">
+    </div>
+    <div class="col-lg-6">
+      <nav class="footer-links text-lg-right text-center pt-2 pt-lg-0">
+        <a href="/" class="scrollto">Home</a>
+      </nav>
+    </div>
+  </div>
+
+
+  <!-- Optional JavaScript; choose one of the two! -->
+  <script>
+      $('#join_button').click(function () {
+
+          let email = $('#input_email').val();
+          let password = $('#input_password').val();
+          let nickname = $('#input_nickname').val();
+          let name = $('#input_name').val();
+          let phonenum = $('#input_phonenum').val();
+
+          console.log(email, password, nickname, name, phonenum);
+
+          $.ajax({
+              url: "/user/join",
+              data: {
+                  email: email,
+                  password: password,
+                  nickname: nickname,
+                  name: name,
+                  phonenum: phonenum
+              },
+              method: "POST",
+              success: function (data) {
+                  console.log("성공");
+                  alert("회원가입 성공했습니다. 로그인해주세요.");
+                  location.replace('/user/login');
+
+              },
+              error: function (request, status, error) {
+                  console.log("에러");
+              },
+              complete: function () {
+                  console.log("완료");
+              }
+          });
+      });
+  </script>
+
+
+  <!-- Option 1: Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+          crossorigin="anonymous"></script>
+
+  <!-- Option 2: Separate Popper and Bootstrap JS -->
+  <!--
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+  -->
+  </body>
+  </html>
+
+
+{% endblock %}
