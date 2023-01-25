@@ -17,7 +17,7 @@ from content.models import Content
 from content.models import Bus_Stop
 from content.models import User_Stop
 from sklearn.cluster import KMeans
-from . import RouteSearch
+# from . import RouteSearch
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
@@ -135,6 +135,7 @@ def get_busroute_payload(start, viapoints, end):
         "startX": start['lon'],
         "startY": start['lat'],
         "startTime": "201709121938",
+        "searchOption": "2",
         "endName": end['name'],
         "endX": end['lon'],
         "endY": end['lat'],
@@ -168,8 +169,7 @@ def getPath(resultData):
             
         if(geometry["type"] == "LineString"):
             resultList.append(geometry["coordinates"])
-            print(properties['time'])
-            times.append(int(properties['time']))
+            times.append(int(properties['distance']) // 16)
             distance.append(int(properties['distance']))
         # 경유지        
         elif (geometry["type"] == "Point") and ("viaPointId" in properties):

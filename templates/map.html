@@ -47,6 +47,10 @@
 
     let arr = [];
 
+    var max_lat = 0.0, max_lon = 0.0, min_lat = 50.0, min_lon = 150.0;
+    var centerLat, centerLon;
+    var x, y;
+
     var posOptions = {
         enableHighAccuracy: false,
         timeout: 10000,
@@ -75,9 +79,8 @@
     }
     //  alert("내용부분 : " + this.lat + " / " + this.lon);
 
-
-
     function initTmap() {
+
         // 1. 지도 띄우기
         // { #let content = JSON.parse("{{ content | safe }}")# }
         // { #console.log(content);# }
@@ -92,7 +95,6 @@
             zoomControl: true,
             scrollwheel: true
         });
-
 
         // 3. 경로탐색 API 사용요청
         document.querySelector("#btn_select").addEventListener('click', (event) => {
@@ -138,8 +140,9 @@
 
                         route_info.walking.time.splice(1, 0, userBusTime);
                         route_info.walking.distance.splice(1, 0, userBusDistance);
-                        
+
                         showPoint(route_info.walking.points, route_info.walking.time, route_info.walking.distance);
+                        cal_center(route_info.bus.viaPoints);
                     }
                     else { // 기사
                         driverPath = route_info.path;
@@ -148,11 +151,32 @@
 
                         drawRoute(driverPath, "#ff0000");
                         showPoint(route_info.viaPoints, route_info.time, route_info.distance);
+                        cal_center(route_info.viaPoints);
                     }
+
+                    var bounds = new Tmapv2.LatLngBounds();
+                    bounds.extend(new Tmapv2.LatLng(centerLat + x, centerLon));
+                    bounds.extend(new Tmapv2.LatLng(centerLat - x, centerLon));
+                    bounds.extend(new Tmapv2.LatLng(centerLat, centerLon + y));
+                    bounds.extend(new Tmapv2.LatLng(centerLat, centerLon - y));
+                    map.fitBounds(bounds);
                 });
             });
             console.log(arr);
         });
+    }
+
+    function cal_center(points) {
+        points.forEach((poi) => {
+            if (max_lat < poi.lat) { max_lat = poi.lat; }
+            if (max_lon < poi.lon) { max_lon = poi.lon; }
+            if (min_lat > poi.lat) { min_lat = poi.lat; }
+            if (min_lon > poi.lon) { min_lon = poi.lon; }
+        });
+        centerLat = (max_lat + min_lat) / 2.0;
+        centerLon = (max_lon + min_lon) / 2.0;
+        x = (max_lat - min_lat) / 2.0;
+        y = (max_lon - min_lon) / 2.0;
     }
 
     function showPoint(pointArray, timeArray, distanceArray) {
@@ -169,10 +193,10 @@
             route.setAttribute('class', 'route');
             route.dataset.lat = pointArray[i].lat;
             route.dataset.lon = pointArray[i].lon;
-            
+
             textDiv.innerHTML = pointArray[i].name;
             route.appendChild(textDiv);
-            
+
             if (i < pointArray.length - 1) {
                 let time, distance;
                 let childDiv = document.createElement('div');
@@ -191,8 +215,8 @@
 
             route.addEventListener('click', (event) => {
                 let coord = new Tmapv2.LatLng(route.dataset.lat, route.dataset.lon);
-                map.panTo(coord);
-                map.setZoom(13);
+                map.setCenter(coord);
+                map.setZoom(15);
             });
 
             route_container.appendChild(route);
@@ -204,6 +228,11 @@
         let hour = dateString.slice(0, 2);
         let min = dateString.slice(3);
         let timeString;
+
+
+        if (min[0] == '0') {
+            min = min[1];
+        }
 
         if (hour == '00') {
             timeString = min + "분";
@@ -236,7 +265,6 @@
                 drawInfo.push(latlng);
                 drawLine(drawInfo, color);
             })
-
         });
     }
 
@@ -352,7 +380,12 @@
                 </ul>
             </div>
         </div>
-
+        <div class="preload" style="text-align: center;z-index: 2;position: absolute; display: none;">
+            <div class="emoji" style="font-size: xxx-large;">
+                🕐
+                <div style="font-size: large;">경로를 탐색중입니다</div>
+            </div>
+        </div>
     </div>
 </body>
 
