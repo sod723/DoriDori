@@ -6,9 +6,15 @@
   <component name="ChangeListManager">
     <list default="true" id="8c59ef7d-db4b-4b75-8f52-37f80eacaa51" name="Changes" comment="출발점도착점설정">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/content/RouteSearch.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/content/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/content/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/board/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/board/migrations/0001_initial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/migrations/0001_initial.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/migrations/__init__ 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/content/migrations/__init__.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/content/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/content/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/map.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/map.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/migrations/0001_initial 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/user/migrations/0001_initial.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,19 +43,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/guneegunee/DoriDori/templates&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;PyConsoleConfigurable.Python Console&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "/Users/song/Downloads/DoriDori",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "settings.editor.selected.configurable": "PyConsoleConfigurable.Python Console",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
       <console-settings module-name="DoriDori" is-module-sdk="true">
@@ -70,7 +77,6 @@
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
-        <env name="DJANGO_SETTINGS_MODULE" value="DoriDori.settings" />
       </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="" />
@@ -100,6 +106,7 @@
       <workItem from="1673869292800" duration="2115000" />
       <workItem from="1674044988117" duration="21176000" />
       <workItem from="1674218366310" duration="6754000" />
+      <workItem from="1674819204903" duration="337000" />
     </task>
     <task id="LOCAL-00001" summary="주소입력,값 넘기기">
       <created>1673925146019</created>

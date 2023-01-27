@@ -2,429 +2,501 @@
 {% load static %}
 {% block body %}
 
-<!-- leaflet js  -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-    crossorigin="" />
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-    crossorigin=""></script>
+  <!-- leaflet js  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+          integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+          crossorigin=""></script>
 
-<!-- leaflet locate control -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+  <!-- leaflet locate control -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js"
+          charset="utf-8"></script>
 
-<!-- map api -->
-<script defer src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script> <!-- 주소검색 api-->
-<script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=l7xx0540ab9b13084d30b44950c8a1b7f405"></script>
+  <!-- map api -->
+  <script defer src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script> <!-- 주소검색 api-->
+  <script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=l7xx0540ab9b13084d30b44950c8a1b7f405"></script>
 
-<script type="text/javascript">
-    var userLatLng = "{% url 'content:getApi' %}";
-    var setpointpage = "{% url 'content:getspotpoint' %}";
-    // {# var pathfinder = "{% url 'pathfinder' %}"; #}
-    // {# var saferoute = "{% url 'saferoute' %}"; #}
+  <script type="text/javascript">
+      var userLatLng = "{% url 'content:getApi' %}";
+      var setpointpage = "{% url 'content:getspotpoint' %}";
+      // {# var pathfinder = "{% url 'pathfinder' %}"; #}
+      // {# var saferoute = "{% url 'saferoute' %}"; #}
 
-</script>
+  </script>
 
-<script type="text/javascript">
+  <script type="text/javascript">
 
-    var map;
-    var markerInfo;
-    //출발지,도착지 마커
-    var marker_s, marker_e, marker_p, marker_on, marker_off;
-    //경로그림정보
-    var drawInfoArr = [];
-    var drawInfoArr2 = [];
+      var map;
+      var markerInfo;
+      //출발지,도착지 마커
+      var marker_s, marker_e, marker_p, marker_on, marker_off;
+      //경로그림정보
+      var drawInfoArr = [];
+      var drawInfoArr2 = [];
 
-    var chktraffic = [];
-    var resultdrawArr = [];
-    var resultMarkerArr = [];
-    var pointArr = [];
+      var chktraffic = [];
+      var resultdrawArr = [];
+      var resultMarkerArr = [];
+      var pointArr = [];
 
-    var usrlat = "37.49241689559544";
-    var usrlon = "127.03171389453507";
+      var usrlat = "37.49241689559544";
+      var usrlon = "127.03171389453507";
 
-    let arr = [];
+      let arr = [];
 
-    var max_lat = 0.0, max_lon = 0.0, min_lat = 50.0, min_lon = 150.0;
-    var centerLat, centerLon;
-    var x, y;
+      var max_lat = 0.0, max_lon = 0.0, min_lat = 50.0, min_lon = 150.0;
+      var centerLat, centerLon;
+      var x, y;
 
-    var posOptions = {
-        enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 60000
-    };
-    function success(pos) {
-        var crd = pos.coords;
-        console.log('Your current position is:');
-        console.log('Latitude : ' + crd.latitude);
-        usrlat = crd.latitude;
-        console.log('Longitude: ' + crd.longitude);
-        usrlon = crd.longitude
-        console.log('More or less ' + crd.accuracy + ' meters.');
+      var posOptions = {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 60000
+      };
 
-        this.lat = crd.latitude;
-        this.lon = crd.longitude;
-        //alert(lat + " / " + lon);
-    };
-    function error(err) {
-        console.warn('ERROR(' + err.code + '): ' + err.message);
-        alert('ERROR(' + err.code + '): ' + err.message);
-    };
+      function success(pos) {
+          var crd = pos.coords;
+          console.log('Your current position is:');
+          console.log('Latitude : ' + crd.latitude);
+          usrlat = crd.latitude;
+          console.log('Longitude: ' + crd.longitude);
+          usrlon = crd.longitude
+          console.log('More or less ' + crd.accuracy + ' meters.');
 
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(success, error, posOptions);
-    }
-    //  alert("내용부분 : " + this.lat + " / " + this.lon);
+          this.lat = crd.latitude;
+          this.lon = crd.longitude;
+          //alert(lat + " / " + lon);
+      };
 
-    function initTmap() {
+      function error(err) {
+          console.warn('ERROR(' + err.code + '): ' + err.message);
+          alert('ERROR(' + err.code + '): ' + err.message);
+      };
 
-        // 1. 지도 띄우기
-        // { #let content = JSON.parse("{{ content | safe }}")# }
-        // { #console.log(content);# }
-        // { #console.log(latitude)# }
+      if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(success, error, posOptions);
+      }
+      //  alert("내용부분 : " + this.lat + " / " + this.lon);
+      var _oldFetch = fetch;
+      var visible = true;
+      // Create our new version of the fetch function
+      window.fetch = function () {
 
+          // Create hooks
+          var fetchStart = new Event('fetchStart', {'view': document, 'bubbles': true, 'cancelable': false});
+          var fetchEnd = new Event('fetchEnd', {'view': document, 'bubbles': true, 'cancelable': false});
 
-        map = new Tmapv2.Map("map_div", {
-            center: new Tmapv2.LatLng(usrlat, usrlon),
-            width: "100%",
-            height: "80vh",
-            zoom: 11,
-            zoomControl: true,
-            scrollwheel: true
-        });
+          // Pass the supplied arguments to the real fetch function
+          var fetchCall = _oldFetch.apply(this, arguments);
 
-        // 3. 경로탐색 API 사용요청
-        document.querySelector("#btn_select").addEventListener('click', (event) => {
+          // Trigger the fetchStart event
+          document.dispatchEvent(fetchStart);
 
-            let route_info;
+          fetchCall.then(function () {
+              // Trigger the fetchEnd event
+              document.dispatchEvent(fetchEnd);
+          }).catch(function () {
+              // Trigger the fetchEnd event
+              document.dispatchEvent(fetchEnd);
+          });
 
-            let userPassengerPath;
-            let userBusRoute;
+          return fetchCall;
+      };
 
-            let driverPath;
+      document.addEventListener('fetchStart', function () {
+          const loader = document.querySelector('.preload');
+          const emoji = loader.querySelector('.emoji');
+          loader.style.display = "block";
 
-            let busViaPoint = [];
-            let markPoints = [];
+          const emojis = ["🕐", "🕜", "🕑", "🕝", "🕒", "🕞", "🕓", "🕟", "🕔", "🕠", "🕕", "🕡", "🕖", "🕢", "🕗", "🕣", "🕘", "🕤", "🕙", "🕥", "🕚", "🕦", "🕛", "🕧"];
 
-            fetch("/getRoute", {
-                method: "POST",
-            }).then(function (data) {
-                data.text().then((text) => {
+          const interval = 125;
 
-                    try {
-                        route_info = JSON.parse(text);
-                    } catch (e) {
-                        window.location.href = text;
-                        return; // error in the above string (in this case, yes)!
-                    }
+          const loadEmojis = (arr) => {
+              let inter = setInterval(() => {
+                  if (visible) {
+                      emoji.innerText = arr[Math.floor(Math.random() * arr.length)];
+                  } else {
+                      clearInterval(inter);
+                  }
+                  //console.log(Math.floor(Math.random() * arr.length))
+              }, interval);
+          }
 
-                    console.log(route_info);
+          const init = () => {
+              loadEmojis(emojis);
+          }
+          init();
 
-                    resettingMap();
+          let btns = document.querySelectorAll(".btn");
+          console.log(btns);
+          btns.forEach((btn) => {
+              btn.disabled = true;
+          });
+      });
 
-                    if (route_info.walking) { //승객
-                        userPassengerPath = route_info.walking.path;
-                        userBusRoute = route_info.bus.path;
-                        setMarker(route_info.walking.points);
-                        setViaPoint(route_info.bus.viaPoints);
+      document.addEventListener('fetchEnd', function () {
+          document.querySelector('.preload').style.display = "none";
+          visible = false;
+          alert("경로가 검색되었습니다.");
+      });
 
-                        userPassengerPath.forEach((route) => {
-                            drawRoute(route, "#ff0000");
-                        });
-                        drawRoute(userBusRoute, "#229c9e");
-                        let userBusTime = route_info.bus.time.reduce((a, b) => a + b, 0);
-                        let userBusDistance = route_info.bus.distance.reduce((a, b) => a + b, 0);
+      function initTmap() {
 
-                        route_info.walking.time.splice(1, 0, userBusTime);
-                        route_info.walking.distance.splice(1, 0, userBusDistance);
-
-                        showPoint(route_info.walking.points, route_info.walking.time, route_info.walking.distance);
-                        cal_center(route_info.bus.viaPoints);
-                    }
-                    else { // 기사
-                        driverPath = route_info.path;
-                        arr = route_info.viaPoints;
-                        setMarker(route_info.viaPoints);
-
-                        drawRoute(driverPath, "#229c9e");
-                        showPoint(route_info.viaPoints, route_info.time, route_info.distance);
-                        cal_center(route_info.viaPoints);
-                    }
-
-                    var bounds = new Tmapv2.LatLngBounds();
-                    bounds.extend(new Tmapv2.LatLng(centerLat + x, centerLon));
-                    bounds.extend(new Tmapv2.LatLng(centerLat - x, centerLon));
-                    bounds.extend(new Tmapv2.LatLng(centerLat, centerLon + y));
-                    bounds.extend(new Tmapv2.LatLng(centerLat, centerLon - y));
-                    map.fitBounds(bounds);
-                });
-            });
-            console.log(arr);
-        });
-    }
-
-    function cal_center(points) {
-        points.forEach((poi) => {
-            if (max_lat < poi.lat) { max_lat = poi.lat; }
-            if (max_lon < poi.lon) { max_lon = poi.lon; }
-            if (min_lat > poi.lat) { min_lat = poi.lat; }
-            if (min_lon > poi.lon) { min_lon = poi.lon; }
-        });
-        centerLat = (max_lat + min_lat) / 2.0;
-        centerLon = (max_lon + min_lon) / 2.0;
-        x = (max_lat - min_lat) / 2.0;
-        y = (max_lon - min_lon) / 1.0;
-    }
-
-    function showPoint(pointArray, timeArray, distanceArray) {
-        let route_container = document.querySelector("#route_list");
-
-        if (route_container.childNodes) {
-            route_container.innerHTML = '';
-        }
-
-        for (let i = 0; i < pointArray.length; i++) {
-            let route = document.createElement('li');
-            let textDiv = document.createElement('div');
-
-            route.setAttribute('class', 'route');
-            route.dataset.lat = pointArray[i].lat;
-            route.dataset.lon = pointArray[i].lon;
-
-            textDiv.innerHTML = pointArray[i].name;
-            route.appendChild(textDiv);
-
-            if (i < pointArray.length - 1) {
-                let time, distance;
-                let childDiv = document.createElement('div');
-                time = secToHHMMString(timeArray[i]);
-                distance = mToKmString(distanceArray[i]);
-
-                childDiv.innerHTML = time + " ↓ " + distance;
-                route.appendChild(childDiv);
-            }
-            else {
-                let totalTime = secToHHMMString(timeArray.reduce((a, b) => a + b, 0));
-                let totalDistance = mToKmString(distanceArray.reduce((a, b) => a + b, 0));
-                let totalTextNode = document.createTextNode("총 시간: " + totalTime + ", 총 거리: " + totalDistance);
-                route_container.parentNode.appendChild(totalTextNode);
-            }
-
-            route.addEventListener('click', (event) => {
-                let coord = new Tmapv2.LatLng(route.dataset.lat, route.dataset.lon);
-                map.setCenter(coord);
-                map.setZoom(15);
-            });
-
-            route_container.appendChild(route);
-        }
-    }
-
-    function secToHHMMString(sec) {
-        let dateString = new Date(sec * 1000).toISOString().slice(11, 16);
-        let hour = dateString.slice(0, 2);
-        let min = dateString.slice(3);
-        let timeString;
+          // 1. 지도 띄우기
+          // { #let content = JSON.parse("{{ content | safe }}")# }
+          // { #console.log(content);# }
+          // { #console.log(latitude)# }
 
 
-        if (min[0] == '0') {
-            min = min[1];
-        }
+          map = new Tmapv2.Map("map_div", {
+              center: new Tmapv2.LatLng(usrlat, usrlon),
+              width: "100%",
+              height: "80vh",
+              zoom: 11,
+              zoomControl: true,
+              scrollwheel: true
+          });
 
-        if (hour == '00') {
-            timeString = min + "분";
-        } else {
-            timeString = hour.slice(1) + "시간 " + min + "분";
-        }
+          // 3. 경로탐색 API 사용요청
+          document.querySelector("#btn_select").addEventListener('click', (event) => {
 
-        return timeString;
-    }
+              let route_info;
 
-    function mToKmString(m) {
-        let km = m / 1000;
-        let distanceString;
-        if (km > 1) {
-            distanceString = km.toFixed(1) + " km";
-        } else {
-            distanceString = m + " m";
-        }
+              let userPassengerPath;
+              let userBusRoute;
 
-        return distanceString;
-    }
+              let driverPath;
 
-    function drawRoute(lineStringArr, color) {
-        let drawInfo = [];
+              let busViaPoint = [];
+              let markPoints = [];
 
-        lineStringArr.forEach((pointArr) => {
-            pointArr.forEach((point) => {
-                let latlng = new Tmapv2.LatLng(
-                    point[1], point[0]);
-                drawInfo.push(latlng);
-                drawLine(drawInfo, color);
-            })
-        });
-    }
+              fetch("/getRoute", {
+                  method: "POST",
+              }).then(function (data) {
+                  data.text().then((text) => {
 
-    // 경로 그리기
-    function drawLine(arrPoint, color) {
-        var polyline_;
+                      try {
+                          route_info = JSON.parse(text);
+                      } catch (e) {
+                          window.location.href = text;
+                          return; // error in the above string (in this case, yes)!
+                      }
 
-        polyline_ = new Tmapv2.Polyline({
-            path: arrPoint,
-            strokeColor: color,
-            strokeWeight: 4,
-            map: map
-        });
-        resultdrawArr.push(polyline_);
-    }
+                      console.log(route_info);
 
-    function setViaPoint(points) {
-        console.log(points);
-        points.forEach((poi) => {
-            marker = new Tmapv2.Marker(
-                {
-                    position: new Tmapv2.LatLng(
-                        poi.lat,
-                        poi.lon),
-                    icon: "https://postfiles.pstatic.net/MjAyMzAxMjVfMTAw/MDAxNjc0NjIwODkyNzIy.SbGS928H7yvR9ZRNvP_rqBJ2jiq_5IxnbvuKko7ckwkg.iddwW-EceWi528-cd2NgGlcTkqW_jqzNrUVNPFNKWKUg.PNG.keyhyun0123/image2vector.png?type=w580",
-                    iconSize: new Tmapv2.Size(35, 35),
-                    title: poi.name,
-                    map: map
-                });
-            resultMarkerArr.push(marker);
-        });
-    }
+                      resettingMap();
 
-    function setMarker(positions) {
-        let start_end = [positions[0], positions[positions.length - 1]];
-        let mark_img_tag = ['s', 'e'];
-        console.log(start_end);
-        for (let i = 0; i < 2; i++) {
-            marker = new Tmapv2.Marker(
-                {
-                    position: new Tmapv2.LatLng(
-                        start_end[i].lat,
-                        start_end[i].lon),
-                    icon: "https://postfiles.pstatic.net/MjAyMzAxMjVfNTcg/MDAxNjc0NjIzOTY3MTIz.bRdv0u15hKD0owBPoLETrLPlY8pfYC2t7pYNxMD0w5Mg.xSn1p05CUqANRlrzZBFc4QQiKrnMmxioIM0YdOt9_A8g.PNG.keyhyun0123/SE-72ea39b2-4a0d-4f7e-bae2-bb5a18a7c002.png?type=w580",
-                    iconSize: new Tmapv2.Size(40, 50),
-                    title: start_end[i].name,
-                    map: map
-                });
-            resultMarkerArr.push(marker);
-        }
-        let vias = positions.slice(1, -1);
+                      if (route_info.walking) { //승객
+                          userPassengerPath = route_info.walking.path;
+                          userBusRoute = route_info.bus.path;
+                          setMarker(route_info.walking.points);
+                          setViaPoint(route_info.bus.viaPoints);
 
-        setViaPoint(vias);
-    }
+                          userPassengerPath.forEach((route) => {
+                              drawRoute(route, "#ff0000");
+                          });
+                          drawRoute(userBusRoute, "#229c9e");
+                          let userBusTime = route_info.bus.time.reduce((a, b) => a + b, 0);
+                          let userBusDistance = route_info.bus.distance.reduce((a, b) => a + b, 0);
 
-    //초기화 기능
-    function resettingMap() {
-        // //기존마커는 삭제
-        // marker_s.setMap(null);
-        // marker_e.setMap(null);
+                          route_info.walking.time.splice(1, 0, userBusTime);
+                          route_info.walking.distance.splice(1, 0, userBusDistance);
 
-        if (resultMarkerArr.length > 0) {
-            for (var i = 0; i < resultMarkerArr.length; i++) {
-                resultMarkerArr[i].setMap(null);
-            }
-        }
+                          showPoint(route_info.walking.points, route_info.walking.time, route_info.walking.distance);
+                          cal_center(route_info.bus.viaPoints);
+                      } else { // 기사
+                          driverPath = route_info.path;
+                          arr = route_info.viaPoints;
+                          setMarker(route_info.viaPoints);
 
-        if (resultdrawArr.length > 0) {
-            for (var i = 0; i < resultdrawArr.length; i++) {
-                resultdrawArr[i].setMap(null);
-            }
-        }
+                          drawRoute(driverPath, "#229c9e");
+                          showPoint(route_info.viaPoints, route_info.time, route_info.distance);
+                          cal_center(route_info.viaPoints);
+                      }
 
-        drawInfoArr = [];
-        resultMarkerArr = [];
-        resultdrawArr = [];
-    }
-</script>
+                      var bounds = new Tmapv2.LatLngBounds();
+                      bounds.extend(new Tmapv2.LatLng(centerLat + x, centerLon));
+                      bounds.extend(new Tmapv2.LatLng(centerLat - x, centerLon));
+                      bounds.extend(new Tmapv2.LatLng(centerLat, centerLon + y));
+                      bounds.extend(new Tmapv2.LatLng(centerLat, centerLon - y));
+                      map.fitBounds(bounds);
+                  });
+              });
+              console.log(arr);
+          });
+      }
 
-{#출발 및 도착지#}
-<div class='inputaddr'>
+      function cal_center(points) {
+          points.forEach((poi) => {
+              if (max_lat < poi.lat) {
+                  max_lat = poi.lat;
+              }
+              if (max_lon < poi.lon) {
+                  max_lon = poi.lon;
+              }
+              if (min_lat > poi.lat) {
+                  min_lat = poi.lat;
+              }
+              if (min_lon > poi.lon) {
+                  min_lon = poi.lon;
+              }
+          });
+          centerLat = (max_lat + min_lat) / 2.0;
+          centerLon = (max_lon + min_lon) / 2.0;
+          x = (max_lat - min_lat) / 2.0;
+          y = (max_lon - min_lon) / 1.0;
+      }
+
+      function showPoint(pointArray, timeArray, distanceArray) {
+          let route_container = document.querySelector("#route_list");
+
+          if (route_container.childNodes) {
+              route_container.innerHTML = '';
+          }
+
+          for (let i = 0; i < pointArray.length; i++) {
+              let route = document.createElement('li');
+              let textDiv = document.createElement('div');
+
+              route.setAttribute('class', 'route');
+              route.dataset.lat = pointArray[i].lat;
+              route.dataset.lon = pointArray[i].lon;
+
+              textDiv.innerHTML = pointArray[i].name;
+              route.appendChild(textDiv);
+
+              if (i < pointArray.length - 1) {
+                  let time, distance;
+                  let childDiv = document.createElement('div');
+                  time = secToHHMMString(timeArray[i]);
+                  distance = mToKmString(distanceArray[i]);
+
+                  childDiv.innerHTML = time + " ↓ " + distance;
+                  route.appendChild(childDiv);
+              } else {
+                  let totalTime = secToHHMMString(timeArray.reduce((a, b) => a + b, 0));
+                  let totalDistance = mToKmString(distanceArray.reduce((a, b) => a + b, 0));
+                  let totalTextNode = document.createTextNode("총 시간: " + totalTime + ", 총 거리: " + totalDistance);
+                  route_container.parentNode.appendChild(totalTextNode);
+              }
+
+              route.addEventListener('click', (event) => {
+                  let coord = new Tmapv2.LatLng(route.dataset.lat, route.dataset.lon);
+                  map.setCenter(coord);
+                  map.setZoom(15);
+              });
+
+              route_container.appendChild(route);
+          }
+      }
+
+      function secToHHMMString(sec) {
+          let dateString = new Date(sec * 1000).toISOString().slice(11, 16);
+          let hour = dateString.slice(0, 2);
+          let min = dateString.slice(3);
+          let timeString;
+
+
+          if (min[0] == '0') {
+              min = min[1];
+          }
+
+          if (hour == '00') {
+              timeString = min + "분";
+          } else {
+              timeString = hour.slice(1) + "시간 " + min + "분";
+          }
+
+          return timeString;
+      }
+
+      function mToKmString(m) {
+          let km = m / 1000;
+          let distanceString;
+          if (km > 1) {
+              distanceString = km.toFixed(1) + " km";
+          } else {
+              distanceString = m + " m";
+          }
+
+          return distanceString;
+      }
+
+      function drawRoute(lineStringArr, color) {
+          let drawInfo = [];
+
+          lineStringArr.forEach((pointArr) => {
+              pointArr.forEach((point) => {
+                  let latlng = new Tmapv2.LatLng(
+                      point[1], point[0]);
+                  drawInfo.push(latlng);
+                  drawLine(drawInfo, color);
+              })
+          });
+      }
+
+      // 경로 그리기
+      function drawLine(arrPoint, color) {
+          var polyline_;
+
+          polyline_ = new Tmapv2.Polyline({
+              path: arrPoint,
+              strokeColor: color,
+              strokeWeight: 4,
+              map: map
+          });
+          resultdrawArr.push(polyline_);
+      }
+
+      function setViaPoint(points) {
+          console.log(points);
+          points.forEach((poi) => {
+              marker = new Tmapv2.Marker(
+                  {
+                      position: new Tmapv2.LatLng(
+                          poi.lat,
+                          poi.lon),
+                      icon: "https://postfiles.pstatic.net/MjAyMzAxMjVfMTAw/MDAxNjc0NjIwODkyNzIy.SbGS928H7yvR9ZRNvP_rqBJ2jiq_5IxnbvuKko7ckwkg.iddwW-EceWi528-cd2NgGlcTkqW_jqzNrUVNPFNKWKUg.PNG.keyhyun0123/image2vector.png?type=w580",
+                      iconSize: new Tmapv2.Size(35, 35),
+                      title: poi.name,
+                      map: map
+                  });
+              resultMarkerArr.push(marker);
+          });
+      }
+
+      function setMarker(positions) {
+          let start_end = [positions[0], positions[positions.length - 1]];
+          let mark_img_tag = ['s', 'e'];
+          console.log(start_end);
+          for (let i = 0; i < 2; i++) {
+              marker = new Tmapv2.Marker(
+                  {
+                      position: new Tmapv2.LatLng(
+                          start_end[i].lat,
+                          start_end[i].lon),
+                      icon: "https://postfiles.pstatic.net/MjAyMzAxMjVfNTcg/MDAxNjc0NjIzOTY3MTIz.bRdv0u15hKD0owBPoLETrLPlY8pfYC2t7pYNxMD0w5Mg.xSn1p05CUqANRlrzZBFc4QQiKrnMmxioIM0YdOt9_A8g.PNG.keyhyun0123/SE-72ea39b2-4a0d-4f7e-bae2-bb5a18a7c002.png?type=w580",
+                      iconSize: new Tmapv2.Size(40, 50),
+                      title: start_end[i].name,
+                      map: map
+                  });
+              resultMarkerArr.push(marker);
+          }
+          let vias = positions.slice(1, -1);
+
+          setViaPoint(vias);
+      }
+
+      //초기화 기능
+      function resettingMap() {
+          // //기존마커는 삭제
+          // marker_s.setMap(null);
+          // marker_e.setMap(null);
+
+          if (resultMarkerArr.length > 0) {
+              for (var i = 0; i < resultMarkerArr.length; i++) {
+                  resultMarkerArr[i].setMap(null);
+              }
+          }
+
+          if (resultdrawArr.length > 0) {
+              for (var i = 0; i < resultdrawArr.length; i++) {
+                  resultdrawArr[i].setMap(null);
+              }
+          }
+
+          drawInfoArr = [];
+          resultMarkerArr = [];
+          resultdrawArr = [];
+      }
+  </script>
+
+  {#출발 및 도착지#}
+  <div class='inputaddr'>
     <div id="pathForm">
-        <div class="input-wrap">
-            {% csrf_token %}
-            <div id="start_input" class="input-group mb-3">
-                <span class="input-group-text bg-warning" id="basic-addon1" onclick="getmarker()">출발</span>
-                <input id='StartAddr' name='StartAddr' type="text" class="opacity-75 form-control"
-                    placeholder="출발지를 입력하세요" aria-label="Username" aria-describedby="basic-addon1">
-            </div>
-            <div id='end_input' class="input-group mb-3">
-                <span class="input-group-text bg-success text-white" id="basic-addon1">도착</span>
-                <input id='EndAddr' name='EndAddr' type="text" class="opacity-75 form-control" placeholder="목적지를 입력하세요"
-                    aria-label="Username" aria-describedby="basic-addon1">
-            </div>
+      <div class="input-wrap">
+        {% csrf_token %}
+        <div id="start_input" class="input-group mb-3">
+          <span class="input-group-text bg-warning" id="basic-addon1" onclick="getmarker()">출발</span>
+          <input id='StartAddr' name='StartAddr' type="text" class="opacity-75 form-control"
+                 placeholder="출발지를 입력하세요" aria-label="Username" aria-describedby="basic-addon1">
         </div>
-        <div id="search-btn" role="group" aria-label="...">
-            <button id='find_botton' type="button" class="btn btn-dark">위치 저장</button>
-            <button id="btn_select" type="button" class="btn btn-dark">길찾기</button>
+        <div id='end_input' class="input-group mb-3">
+          <span class="input-group-text bg-success text-white" id="basic-addon1">도착</span>
+          <input id='EndAddr' name='EndAddr' type="text" class="opacity-75 form-control" placeholder="목적지를 입력하세요"
+                 aria-label="Username" aria-describedby="basic-addon1">
         </div>
+      </div>
+      <div id="search-btn" role="group" aria-label="...">
+        <button id='find_botton' type="button" class="btn btn-dark">위치 저장</button>
+        <button id="btn_select" type="button" class="btn btn-dark">길찾기</button>
+      </div>
     </div>
-</div>
+  </div>
 
 
 
-<body onload="initTmap();">
+  <body onload="initTmap();">
 
 
-    <div id="map_wrap" class="map_wrap">
-        <div id="map_div">
-            <div id="route_container">
-                <ul id="route_list">
+  <div id="map_wrap" class="map_wrap">
+    <div id="map_div">
+      <div id="route_container">
+        <ul id="route_list">
 
-                </ul>
-            </div>
-        </div>
-        <div class="preload" style="text-align: center;z-index: 2;position: absolute; display: none;">
-            <div class="emoji" style="font-size: xxx-large;">
-                🕐
-                <div style="font-size: large;">경로를 탐색중입니다</div>
-            </div>
-        </div>
+        </ul>
+      </div>
     </div>
-</body>
+    <div class="preload" style="text-align: center;z-index: 2;position: absolute; display: none;">
+      <div class="emoji" style="font-size: xxx-large;">
+        🕐
+        <div style="font-size: large;">경로를 탐색중입니다</div>
+      </div>
+    </div>
+  </div>
+  </body>
 
 
-<div class="map_act_btn_wrap clear_box">
+  <div class="map_act_btn_wrap clear_box">
     <!-- 경로 리스트 -->
-</div>
-<div class="clear"></div>
+  </div>
+  <div class="clear"></div>
 
 
 
-{% for location in location_list %}
-<span class="location_txt"> {{ location.altitude }} </span>
-{% endfor %}
+  {% for location in location_list %}
+    <span class="location_txt"> {{ location.altitude }} </span>
+  {% endfor %}
 
 
 
-{# <div class="route-wrap">#}
-    {# <div id="short" class="rounded border border-4 border-primary opacity-90">#}
-        {# <p>최단 경로</p>#}
-        {# <p id="short-route"></p>#}
-        {# <p id="short-time"></p>#}
-        {# </div>#}
-    {# <div id="safe" class="rounded border border-4 border-success opacity-90">#}
-        {# <p>안전 경로</p>#}
-        {# <p id="safe-route"></p>#}
-        {# <p id="safe-time"></p>#}
-        {# </div>#}
-    {# </div>#}
-{# #}
+  {# <div class="route-wrap">#}
+  {# <div id="short" class="rounded border border-4 border-primary opacity-90">#}
+  {# <p>최단 경로</p>#}
+  {# <p id="short-route"></p>#}
+  {# <p id="short-time"></p>#}
+  {# </div>#}
+  {# <div id="safe" class="rounded border border-4 border-success opacity-90">#}
+  {# <p>안전 경로</p>#}
+  {# <p id="safe-route"></p>#}
+  {# <p id="safe-time"></p>#}
+  {# </div>#}
+  {# </div>#}
+  {# #}
 
-<!-- 전체 지도 -->
-{# <div id='map'>#}
-    {# <!-- {{map|safe}} -->#}
-    {# </div>#}
-{# </body>#}
+  <!-- 전체 지도 -->
+  {# <div id='map'>#}
+  {# <!-- {{map|safe}} -->#}
+  {# </div>#}
+  {# </body>#}
 
 
 
-{% include "footer.html" %}
+  {% include "footer.html" %}
 
 {% endblock %}
