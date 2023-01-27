@@ -29,7 +29,7 @@ python manage.py migrate
 python manage.py runserver
 
 - 브라우져로 접속
-http://127.0.0.1:8000/main/
+http://127.0.0.1:8000/
 ```
 
 ## 주의사항
