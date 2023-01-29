@@ -52,6 +52,7 @@ def map(request):
 
     return render(request, "map.html", {
         'content': Content,
+        'userid': userid
     })
 
 
@@ -351,9 +352,9 @@ def getRoute(request):
     try:
         user_type = request.user.first_name
         userid = request.user.id
-    except Content.DoesNotExist:
+    except AttributeError:
         user_type = "none"
-        return HttpResponse(user_type)
+        return HttpResponse("/user/login")
 
     getDriverRoute(userid)
     if user_type == "passenger":

@@ -47,6 +47,7 @@
       var usrlon = "127.03171389453507";
 
       let arr = [];
+      let login = false;
 
       var max_lat = 0.0, max_lon = 0.0, min_lat = 50.0, min_lon = 150.0;
       var centerLat, centerLon;
@@ -57,7 +58,8 @@
           timeout: 10000,
           maximumAge: 60000
       };
-
+      
+      console.log("{{userid}}");
       function success(pos) {
           var crd = pos.coords;
           console.log('Your current position is:');
@@ -108,6 +110,7 @@
       };
 
       document.addEventListener('fetchStart', function () {
+          if("{{userid}}" === "None") return;
           const loader = document.querySelector('.preload');
           const emoji = loader.querySelector('.emoji');
           loader.style.display = "block";
@@ -122,9 +125,10 @@
                       emoji.innerText = arr[Math.floor(Math.random() * arr.length)];
                   } else {
                       clearInterval(inter);
+                      document.querySelector('.preload').style.display = "none";
                   }
                   //console.log(Math.floor(Math.random() * arr.length))
-              }, interval);
+              }, 500);
           }
 
           const init = () => {
@@ -140,8 +144,10 @@
       });
 
       document.addEventListener('fetchEnd', function () {
-          document.querySelector('.preload').style.display = "none";
+        if("{{userid}}" === "None") return;
+
           visible = false;
+
           alert("경로가 검색되었습니다.");
       });
 
@@ -186,7 +192,7 @@
                           window.location.href = text;
                           return; // error in the above string (in this case, yes)!
                       }
-
+                      login = true;
                       console.log(route_info);
 
                       resettingMap();
@@ -455,8 +461,9 @@
     <div class="preload" style="text-align: center;z-index: 2;position: absolute; display: none;">
       <div class="emoji" style="font-size: xxx-large;">
         🕐
-        <div style="font-size: large;">경로를 탐색중입니다</div>
       </div>
+      <div style="font-size: large;">경로를 탐색중입니다</div>
+
     </div>
   </div>
   </body>
