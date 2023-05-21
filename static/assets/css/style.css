@@ -1696,6 +1696,7 @@ html, body {
     background-color: rgba(255, 255, 255, 0.7);
 }
 
+<<<<<<< HEAD
 @media (max-width: 1200px) {
     
     #route_container{
@@ -1714,6 +1715,8 @@ html, body {
     }
 }
 
+=======
+>>>>>>> main
 #route_container::-webkit-scrollbar { 
     display: none;  /* Safari and Chrome */
 }
@@ -1739,6 +1742,7 @@ html, body {
     text-align: left;
     margin: 4px;
 }
+<<<<<<< HEAD
 
 #bound_button{
     position: absolute;
@@ -1758,3 +1762,5 @@ html, body {
 #bound_button button:hover{
     color: blue;
 }
+=======
+>>>>>>> main

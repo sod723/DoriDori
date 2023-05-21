@@ -44,10 +44,16 @@ driver_data = {
 
 
 def map(request):
+<<<<<<< HEAD
     userid = ''
     try:
         userid = request.user.id
         user = Content.objects.get(user_id=userid)
+=======
+    try:
+        userid = request.user.id
+        user = Content.objects.get(id=userid)
+>>>>>>> main
     except Content.DoesNotExist:
         userid = None
 
@@ -60,6 +66,7 @@ def map(request):
 def SetStartEnd(bus_group):
     print(bus_group)
     print(set)
+<<<<<<< HEAD
     global start
     global end
 
@@ -78,6 +85,20 @@ def SetStartEnd(bus_group):
     if start == 0 or end == 0:
         return None
 
+=======
+    c = 0
+    for bus1 in Bus_Stop.objects.filter(bus_group=bus_group, start_or_end=0):
+        for bus2 in Bus_Stop.objects.filter(bus_group=bus_group, start_or_end=1):
+            print(bus2)
+            temp = math.sqrt(math.pow(bus1.latitude - bus2.latitude, 2) + math.pow(bus1.longitude - bus2.longitude, 2))
+            print(temp)
+            if temp > c:
+                c = temp
+                start = bus1
+                end = bus2
+                print(end)
+
+>>>>>>> main
     start.first = 1
     start.save()
     end.first = 1
@@ -263,7 +284,11 @@ def userRoute(userid):
         }
     }
     try:
+<<<<<<< HEAD
         user = Content.objects.get(user_id=userid)
+=======
+        user = Content.objects.get(id=userid)
+>>>>>>> main
         startbus = Bus_Stop.objects.get(id=user.s_busid)
         endbus = Bus_Stop.objects.get(id=user.e_busid)
         print(SetStartEnd(user.bus_group))
@@ -280,7 +305,10 @@ def userRoute(userid):
 
     set_walking_data(route, user_data['walking'])
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
     set_bus_data(route[1], route[2], user_data['bus'])
     bus_path = []
     for bp in user_data['bus']['path']:
@@ -332,11 +360,15 @@ def set_driver_data(start, viapoints, end, dic):
 
 # 운전자의 경로를 반환
 @csrf_exempt
+<<<<<<< HEAD
 def driverRoute(driver_data):
     path = []
     for p in driver_data['path']:
         path.extend(p)
     driver_data['path'] = path
+=======
+def driverRoute():
+>>>>>>> main
     return HttpResponse(dumps(driver_data))
 
 
@@ -344,6 +376,7 @@ def getDriverRoute(userid):
     if not userid:
         return HttpResponse("Please login")
 
+<<<<<<< HEAD
     user = Content.objects.get(user_id=userid)
     print('getdriver')
     first_end = SetStartEnd(user.bus_group)
@@ -351,6 +384,11 @@ def getDriverRoute(userid):
     if first_end is None:
         return None
     
+=======
+    user = Content.objects.get(id=userid)
+    print('getdriver')
+    first_end = SetStartEnd(user.bus_group)
+>>>>>>> main
     print('퍼스트엔드')
     print(first_end)
     # 클러스터링 데이터
@@ -385,6 +423,7 @@ def getRoute(request):
         user_type = "none"
         return HttpResponse("/user/login")
 
+<<<<<<< HEAD
     route = getDriverRoute(userid)
     
     if route is None:
@@ -394,6 +433,13 @@ def getRoute(request):
         return userRoute(userid)
     else:
         return driverRoute(driver_data)
+=======
+    getDriverRoute(userid)
+    if user_type == "passenger":
+        return userRoute(userid)
+    else:
+        return driverRoute()
+>>>>>>> main
 
 
 def GetSpotPoint(request):

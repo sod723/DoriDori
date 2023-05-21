@@ -15,10 +15,14 @@
             <a class="nav-link scrollto" href="{% url 'user:signup' %}">Sign up</a>
           {% endif %}
         </li>
+<<<<<<< HEAD
         {% if user.is_authenticated and user.first_name == 'driver'%} 
           <li><a class="nav-link scrollto" href="{% url 'board:index' %}">Auction</a></li>
         {% endif %}
         
+=======
+        <li><a class="nav-link scrollto" href="{% url 'board:index' %}">Auction</a></li>
+>>>>>>> main
         <li><a class="nav-link scrollto" href="/map">Map</a></li>
 
 

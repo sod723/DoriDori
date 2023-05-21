@@ -1,5 +1,6 @@
 # Team DoriDori
 
+<<<<<<< HEAD
 
 <p align="center"><img src="./static/assets/img/favicon.png"></p>
 
@@ -21,10 +22,16 @@
 ### Datebase
 
  <img src="https://img.shields.io/badge/sqlite-6DB33F?style=for-the-badge&logo=sqlite&logoColor=white">
+=======
+사용자 위치정보 군집화를 통한 셔틀버스 노선편성 서비스 입니다.
+
+---
+>>>>>>> main
 
 ## 결과예시
 ![스크린샷 2023-01-27 오후 8 51 30](https://user-images.githubusercontent.com/81648520/215080342-fc085832-66c0-4893-94ee-2962f66e0f67.png)
 
+<<<<<<< HEAD
 [구현 부분 영상](https://youtu.be/2uMvvIf_i0A)
 
 ## 주요 기능
@@ -141,6 +148,8 @@
  ├─ views.py
  └─ __init__.py
 ```
+=======
+>>>>>>> main
 ## 실행
 
 python 3.7 이상 버전 설치 후
@@ -165,6 +174,7 @@ python manage.py runserver
 - 브라우져로 접속
 http://127.0.0.1:8000/
 ```
+<<<<<<< HEAD
 ## 주의사항
 ```
 # 같은 지역의 사용자가 4명 이상이 모였을 경우에만 클러스터링이 실행됩니다.
@@ -175,4 +185,10 @@ http://127.0.0.1:8000/
   
   명령어를 실행하고 다시 서버를 실행해 주십시오.
 
+=======
+
+## 주의사항
+```
+# 같은 지역의 사용자가 4명 이상이 모였을 경우에만 클러스터링이 실행됩니다.
+>>>>>>> main
 ```
