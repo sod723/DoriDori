@@ -14,38 +14,25 @@
     </div>
     {% endif %}
     <!-- 질문 -->
-    <h2 class="border-bottom py-2">{{ question.subject }}</h2>
+    <h4 class="border-bottom py-2">인원수 : {{ question.subject }}</h4>
+    <h4 class="border-bottom py-2">마감시간 : {{ question.time }}</h4>
+    <h3 class="border-bottom py-2">경매시작가 : {{ question.content }}</h3>
     <div class="card my-3">
         <div class="card-body">
-            <div class="card-text">{{ question.content|mark }}</div>
-            <div class="d-flex justify-content-end">
-                {% if question.modify_date %}
-                <div class="badge bg-light text-dark p-2 text-start mx-3">
-                    <div class="mb-2">modified at</div>
-                    <div>{{ question.modify_date }}</div>
-                </div>
-                {% endif %}
-                <div class="badge bg-light text-dark p-2 text-start">
-                    <div class="mb-2">{{ question.author.username }}</div>
-                    <div>{{ question.create_date }}</div>
-                </div>
+            <div class="card-text">
+                <img src="https://postfiles.pstatic.net/MjAyMzAxMjVfNTEg/MDAxNjc0NjI4ODE0NjEx.qbJAQ-C8dmKs9DbebdLF-EHqXaoqfTVmtQyf_eTO5ZAg.ILNPMtjbk8V_n2EtZANN2b-9XyI9IlVIYL1Vuf5ZwVEg.PNG.keyhyun0123/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7_2023-01-25_%EC%98%A4%ED%9B%84_2.46.31.png?type=w580">
+            <h3 class="border-bottom py-2">경로 : {{ question.route }}</h3>
             </div>
             <div class="my-3">
-                <a href="javascript:void(0)" data-uri="{% url 'board:question_vote' question.id  %}"
-                   class="recommend btn btn-sm btn-outline-secondary"> 추천
-                    <span class="badge rounded-pill bg-success">{{question.voter.count}}</span>
-                </a>
-                {% if request.user == question.author %}
                 <a href="{% url 'board:question_modify' question.id  %}"
                    class="btn btn-sm btn-outline-secondary">수정</a>
                 <a href="javascript:void(0)" class="delete btn btn-sm btn-outline-secondary"
                    data-uri="{% url 'board:question_delete' question.id  %}">삭제</a>
-                {% endif %}
             </div>
         </div>
     </div>
     <!-- 답변 -->
-    <h5 class="border-bottom my-3 py-2">{{question.answer_set.count}}개의 답변이 있습니다.</h5>
+    <h5 class="border-bottom my-3 py-2">{{question.answer_set.count}}개의 입찰이 있습니다..</h5>
     {% for answer in question.answer_set.all %}
     <a id="answer_{{ answer.id }}"></a>
     <div class="card my-3">
@@ -82,11 +69,11 @@
         {% csrf_token %}
         {% include "form_errors.html" %}
         <div class="mb-3">
-            <label for="content" class="form-label">답변내용</label>
+            <label for="content" class="form-label">입찰금액</label>
             <textarea {% if not user.is_authenticated %}disabled{% endif %}
-                      name="content" id="content" class="form-control" rows="10"></textarea>
+                      name="content" id="content" class="form-control" rows="1"></textarea>
         </div>
-        <input type="submit" value="답변등록" class="btn btn-primary">
+        <input type="submit" value="입찰하기" class="btn btn-primary">
     </form>
 </div>
 {% endblock %}

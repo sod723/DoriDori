@@ -17,221 +17,23 @@
 
 <!-- map api -->
 <script defer src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script> <!-- 주소검색 api-->
-<script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=l7xxa21398bdba4947eba835e6c00ec9ffaf"></script>
+<script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=l7xx0540ab9b13084d30b44950c8a1b7f405"></script>
+
+<script src="https://kit.fontawesome.com/5a0c56dadc.js" crossorigin="anonymous"></script>
+
+<script type="module" src="../static/assets/js/map.js"></script>
+<script defer src="{% static 'assets/js/home.js' %}"></script>
 
 <script type="text/javascript">
     var userLatLng = "{% url 'content:getApi' %}";
     var setpointpage = "{% url 'content:getspotpoint' %}";
-    // {# var pathfinder = "{% url 'pathfinder' %}"; #}
-    // {# var saferoute = "{% url 'saferoute' %}"; #}
-
-</script>
-
-<script type="text/javascript">
-
-    var map;
-    var markerInfo;
-    //출발지,도착지 마커
-    var marker_s, marker_e, marker_p, marker_on, marker_off;
-    //경로그림정보
-    var drawInfoArr = [];
-    var drawInfoArr2 = [];
-
-    var chktraffic = [];
-    var resultdrawArr = [];
-    var resultMarkerArr = [];
-    var pointArr = [];
-
-    var usrlat = "37.49241689559544";
-    var usrlon = "127.03171389453507";
-
-
-    var posOptions = {
-        enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 60000
-    };
-    function success(pos) {
-        var crd = pos.coords;
-        console.log('Your current position is:');
-        console.log('Latitude : ' + crd.latitude);
-        usrlat = crd.latitude;
-        console.log('Longitude: ' + crd.longitude);
-        usrlon = crd.longitude
-        console.log('More or less ' + crd.accuracy + ' meters.');
-
-        this.lat = crd.latitude;
-        this.lon = crd.longitude;
-        //alert(lat + " / " + lon);
-    };
-    function error(err) {
-        console.warn('ERROR(' + err.code + '): ' + err.message);
-        alert('ERROR(' + err.code + '): ' + err.message);
-    };
-
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(success, error, posOptions);
-    }
-    //  alert("내용부분 : " + this.lat + " / " + this.lon);
-
-
-
-    function initTmap() {
-        // 1. 지도 띄우기
-        // { #let content = JSON.parse("{{ content | safe }}")# }
-        // { #console.log(content);# }
-        // { #console.log(latitude)# }
-
-
-        map = new Tmapv2.Map("map_div", {
-            center: new Tmapv2.LatLng(usrlat, usrlon),
-            width: "100%",
-            height: "400px",
-            zoom: 11,
-            zoomControl: true,
-            scrollwheel: true
-        });
-
-
-        // 3. 경로탐색 API 사용요청
-        document.querySelector("#btn_select").addEventListener('click', (event) => {
-
-            let user_type = document.querySelector("#user_type").value;
-
-            let route_info;
-
-            let userPassengerPath;
-            let userBusRoute;
-
-            let driverPath;
-
-            let busViaPoint = [];
-            let markPoints = [];
-
-            fetch(user_type, {
-                method: "POST",
-            }).then(function (data) {
-                data.text().then((text) => {
-                    console.log(text);
-
-                    route_info = JSON.parse(text);
-                    console.log(route_info);
-
-                    resettingMap();
-
-                    if (route_info.walking) { //승객
-                        userPassengerPath = route_info.walking.path;
-                        userBusRoute = route_info.bus.path;
-
-                        setMarker(route_info.walking.points);
-                        setViaPoint(route_info.bus.viaPoints.slice(1, -1));
-
-                        userPassengerPath.forEach((route) => {
-                            drawRoute(route, "#0000ff");
-                        });
-                        drawRoute(userBusRoute, "#ff0000");
-                    }
-                    else { // 기사
-                        driverPath = route_info.path;
-                        let sToE = [];
-                        sToE.push(route_info.viaPoints[0]);
-                        sToE.push(route_info.viaPoints[route_info.viaPoints.length-1]);
-                        setMarker(sToE);
-                        setViaPoint(route_info.viaPoints.slice(1, -1));
-
-                        drawRoute(driverPath, "#ff0000");
-                    }
-                });
-            });
-        });
-        console.log('init');
-
-    }
-
-    function drawRoute(fullpath, color) {
-        let drawInfo = [];
-        fullpath.forEach((point) => {
-            let latlng = new Tmapv2.LatLng(
-                point[1], point[0]);
-            drawInfo.push(latlng);
-            drawLine(drawInfo, color);
-        });
-    }
-
-    // 경로 그리기
-    function drawLine(arrPoint, color) {
-        var polyline_;
-
-        polyline_ = new Tmapv2.Polyline({
-            path: arrPoint,
-            strokeColor: color,
-            strokeWeight: 3,
-            strokeStyle: "dot",
-            map: map
-        });
-        resultdrawArr.push(polyline_);
-    }
-
-    function setViaPoint(points) {
-        console.log(points);
-        points.forEach((poi) => {
-            marker = new Tmapv2.Marker(
-                {
-                    position: new Tmapv2.LatLng(
-                        poi.lat,
-                        poi.lon),
-                    icon: "http://tmapapi.sktelecom.com/upload/tmap/marker/pin_r_m_b.png",
-                    iconSize: new Tmapv2.Size(24, 38),
-                    title: poi.name,
-                    map: map
-                });
-            resultMarkerArr.push(marker);
-
-        });
-    }
-
-    function setMarker(positions) {
-        let lable;
-        console.log(positions);
-
-        positions.forEach((posi) => {
-            marker = new Tmapv2.Marker(
-                {
-                    position: new Tmapv2.LatLng(
-                        posi.lat,
-                        posi.lon),
-                    title: posi.name,
-                    map: map,
-                });
-            resultMarkerArr.push(marker);
-        });
-    }
-
-    //초기화 기능
-    function resettingMap() {
-        // //기존마커는 삭제
-        // marker_s.setMap(null);
-        // marker_e.setMap(null);
-
-        if (resultMarkerArr.length > 0) {
-            for (var i = 0; i < resultMarkerArr.length; i++) {
-                resultMarkerArr[i].setMap(null);
-            }
-        }
-
-        if (resultdrawArr.length > 0) {
-            for (var i = 0; i < resultdrawArr.length; i++) {
-                resultdrawArr[i].setMap(null);
-            }
-        }
-
-        drawInfoArr = [];
-        resultMarkerArr = [];
-        resultdrawArr = [];
-    }
+      // {# var pathfinder = "{% url 'pathfinder' %}"; #}
+      // {# var saferoute = "{% url 'saferoute' %}"; #}
 </script>
 
 {#출발 및 도착지#}
+<body data-userid = "{{userid}}">
+
 <div class='inputaddr'>
     <div id="pathForm">
         <div class="input-wrap">
@@ -239,39 +41,46 @@
             <div id="start_input" class="input-group mb-3">
                 <span class="input-group-text bg-warning" id="basic-addon1" onclick="getmarker()">출발</span>
                 <input id='StartAddr' name='StartAddr' type="text" class="opacity-75 form-control"
-                    placeholder="출발지를 입력하세요" aria-label="Username" aria-describedby="basic-addon1">
+                    placeholder="출발지를 입력하세요" aria-label="Username" aria-describedby="basic-addon1" readonly>
             </div>
             <div id='end_input' class="input-group mb-3">
                 <span class="input-group-text bg-success text-white" id="basic-addon1">도착</span>
                 <input id='EndAddr' name='EndAddr' type="text" class="opacity-75 form-control" placeholder="목적지를 입력하세요"
-                    aria-label="Username" aria-describedby="basic-addon1">
+                    aria-label="Username" aria-describedby="basic-addon1" readonly>
             </div>
         </div>
-        <div id="search-btn" class="btn-group btn-group-lg" role="group" aria-label="...">
-            <button id='find_botton' type="button" class="btn btn-dark">위치저장</button>
+        <div id="search-btn" role="group" aria-label="...">
+            {% if user.is_authenticated and user.first_name == 'passenger'%}
+            <button id='find_botton' type="button" class="btn btn-dark">위치 저장</button>
+            {% endif %}
+            <button id="btn_select" type="button" class="btn btn-dark">길찾기</button>
         </div>
     </div>
 </div>
-<section id="breadcrumbs" class="breadcrumbs">
-    <div class="container">
 
-        <div class="d-flex justify-content-between align-items-center">
 
-            <body onload="initTmap();">
+<!-- onload="initTmap();" -->
+    <div id="map_wrap" class="map_wrap">
+        <div id="map_div">
+            <div id="route_container">
+                <ul id="route_list">
 
-                <div class="ft_area">
-                    <div class="ft_select_wrap">
-                        <div class="ft_select">
-                            <button id="btn_select" type="button" class="btn btn-dark">길찾기</button>
-                            <select id="user_type">
-                                <option value="/userRoute" selected="selected">승객</option>
-                                <option value="/driverRoute">기사</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </body>
-</section>
+                </ul>
+            </div>
+            <div id="bound_button">
+                
+            </div>
+        </div>
+        <div class="preload" style="text-align: center;z-index: 2;position: absolute; display: none;">
+            <div class="emoji" style="font-size: xxx-large;">
+                🕐
+            </div>
+            <div style="font-size: large;">경로를 탐색중입니다</div>
+
+        </div>
+    </div>
+</body>
+
 
 <div class="map_act_btn_wrap clear_box">
     <!-- 경로 리스트 -->
@@ -279,19 +88,35 @@
 <div class="clear"></div>
 
 
-<div id="map_wrap" class="map_wrap">
-    <div id="map_div"></div>
-</div>
 
 {% for location in location_list %}
 <span class="location_txt"> {{ location.altitude }} </span>
 {% endfor %}
 
-<div class="map_act_btn_wrap clear_box"></div>
-<p id="result"></p>
-<br />
 
-  
+
+{# <div class="route-wrap">#}
+    {# <div id="short" class="rounded border border-4 border-primary opacity-90">#}
+        {# <p>최단 경로</p>#}
+        {# <p id="short-route"></p>#}
+        {# <p id="short-time"></p>#}
+        {# </div>#}
+    {# <div id="safe" class="rounded border border-4 border-success opacity-90">#}
+        {# <p>안전 경로</p>#}
+        {# <p id="safe-route"></p>#}
+        {# <p id="safe-time"></p>#}
+        {# </div>#}
+    {# </div>#}
+{# #}
+
+<!-- 전체 지도 -->
+{# <div id='map'>#}
+    {# <!-- {{map|safe}} -->#}
+    {# </div>#}
+{# </body>#}
+
+
+
 {% include "footer.html" %}
 
 {% endblock %}
